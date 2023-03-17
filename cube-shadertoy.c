@@ -39,9 +39,9 @@
 #include "common.h"
 #include "esUtil.h"
 
-static struct {
-	struct egl *egl;
+static struct cube cube;
 
+static struct {
 	/* Shadertoy rendering (to FBO): */
 	GLuint stoy_program;
 	GLuint stoy_fbo, stoy_fbotex;
@@ -397,13 +397,11 @@ static void draw_cube_shadertoy(unsigned i)
 	glDisableVertexAttribArray(2);
 }
 
-const struct egl * init_cube_shadertoy(const struct gbm *gbm, const char *file, int samples)
+const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm *gbm, const char *file)
 {
 	int ret;
 
-	gl.egl = init_egl(gbm, samples);
-	if (!gl.egl)
-		return NULL;
+	(void)egl;
 
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
 	gl.width = gbm->width;
@@ -453,7 +451,7 @@ const struct egl * init_cube_shadertoy(const struct gbm *gbm, const char *file, 
 		return NULL;
 	}
 
-	gl.egl->draw = draw_cube_shadertoy;
+	cube.draw = draw_cube_shadertoy;
 
-	return gl.egl;
+	return &cube;
 }

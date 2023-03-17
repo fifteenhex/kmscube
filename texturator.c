@@ -86,9 +86,10 @@
  *
  */
 
-static struct egl *egl;
+static const struct egl *egl;
 static const struct gbm *gbm;
 static const struct drm *drm;
+static struct cube *cube;
 static int max_error_frames = 5;
 static int error_frames;
 static int zoom = 1;
@@ -968,9 +969,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	egl->draw = draw_and_check_quads;
+	cube->draw = draw_and_check_quads;
 
 	setup_gl();
 
-	return drm->run(gbm, egl);
+	return drm->run(gbm, egl, cube);
 }

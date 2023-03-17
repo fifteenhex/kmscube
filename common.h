@@ -145,8 +145,6 @@ struct egl {
 	PFNGLGETPERFMONITORCOUNTERDATAAMDPROC    glGetPerfMonitorCounterDataAMD;
 
 	bool modifiers_supported;
-
-	void (*draw)(unsigned i);
 };
 
 static inline int __egl_check(void *ptr, const char *name)
@@ -164,6 +162,10 @@ struct egl * init_egl(const struct gbm *gbm, int samples);
 int create_program(const char *vs_src, const char *fs_src);
 int link_program(unsigned program);
 
+struct cube {
+	void (*draw)(unsigned i);
+};
+
 enum mode {
 	SMOOTH,        /* smooth-shaded */
 	RGBA,          /* single-plane RGBA */
@@ -173,17 +175,17 @@ enum mode {
 	SHADERTOY,     /* display shadertoy shader */
 };
 
-const struct egl * init_cube_smooth(const struct gbm *gbm, int samples);
-const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samples);
-const struct egl * init_cube_gears(const struct gbm *gbm, int samples);
+const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gbm);
+const struct cube * init_cube_tex(const struct egl *egl, const struct gbm *gbm, enum mode mode);
+const struct cube * init_cube_gears(const struct egl *egl, const struct gbm *gbm);
 
 #ifdef HAVE_GLES3
-const struct egl * init_cube_shadertoy(const struct gbm *gbm, const char *shadertoy, int samples);
+const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm *gbm, const char *shadertoy);
 #else
-static inline const struct egl *
-init_cube_shadertoy(const struct gbm *gbm, const char *shadertoy, int samples)
+static inline const struct cube *
+init_cube_shadertoy(const struct egl *egl, const struct gbm *gbm, const char *shadertoy)
 {
-	(void)gbm; (void)shadertoy; (void)samples;
+	(void)egl; (void)gbm; (void)shadertoy;
 	printf("no GLES3 support!\n");
 	return NULL;
 }
@@ -196,13 +198,13 @@ struct decoder * video_init(const struct egl *egl, const struct gbm *gbm, const 
 EGLImage video_frame(struct decoder *dec);
 void video_deinit(struct decoder *dec);
 
-const struct egl * init_cube_video(const struct gbm *gbm, const char *video, int samples);
+const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm, const char *video);
 
 #else
-static inline const struct egl *
-init_cube_video(const struct gbm *gbm, const char *video, int samples)
+static inline const struct cube *
+init_cube_video(const struct egl *egl, const struct gbm *gbm, const char *video)
 {
-	(void)gbm; (void)video; (void)samples;
+	(void)egl; (void)gbm; (void)video;
 	printf("no GStreamer support!\n");
 	return NULL;
 }

@@ -40,6 +40,7 @@ GST_DEBUG_CATEGORY(kmscube_debug);
 static const struct egl *egl;
 static const struct gbm *gbm;
 static const struct drm *drm;
+static const struct cube *cube;
 
 static const char *shortopts = "Ac:D:f:gM:m:n:NOp:S:s:V:v:x";
 
@@ -239,19 +240,25 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	if (gears)
-		egl = init_cube_gears(gbm, samples);
-	else if (mode == SMOOTH)
-		egl = init_cube_smooth(gbm, samples);
-	else if (mode == VIDEO)
-		egl = init_cube_video(gbm, video, samples);
-	else if (mode == SHADERTOY)
-		egl = init_cube_shadertoy(gbm, shadertoy, samples);
-	else
-		egl = init_cube_tex(gbm, mode, samples);
-
+	egl = init_egl(gbm, samples);
 	if (!egl) {
 		printf("failed to initialize EGL\n");
+		return -1;
+	}
+
+	if (gears)
+		cube = init_cube_gears(egl, gbm);
+	else if (mode == SMOOTH)
+		cube = init_cube_smooth(egl, gbm);
+	else if (mode == VIDEO)
+		cube = init_cube_video(egl, gbm, video);
+	else if (mode == SHADERTOY)
+		cube = init_cube_shadertoy(egl, gbm, shadertoy);
+	else
+		cube = init_cube_tex(egl, gbm, mode);
+
+	if (!cube) {
+		printf("failed to initialize cube\n");
 		return -1;
 	}
 
@@ -267,5 +274,5 @@ int main(int argc, char *argv[])
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	return drm->run(gbm, egl);
+	return drm->run(gbm, egl, cube);
 }

@@ -31,8 +31,10 @@
 #include "common.h"
 #include "esUtil.h"
 
+static struct cube cube;
+
 static struct {
-	struct egl *egl;
+	const struct egl *egl;
 
 	GLfloat aspect;
 	const struct gbm *gbm;
@@ -299,14 +301,12 @@ static void draw_cube_video(unsigned i)
 	gl.last_fence = gl.egl->eglCreateSyncKHR(gl.egl->display, EGL_SYNC_FENCE_KHR, NULL);
 }
 
-const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames, int samples)
+const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm, const char *filenames)
 {
 	char *fnames, *s;
 	int ret, i = 0;
 
-	gl.egl = init_egl(gbm, samples);
-	if (!gl.egl)
-		return NULL;
+	gl.egl = egl;
 
 	if (egl_check(gl.egl, glEGLImageTargetTexture2DOES) ||
 	    egl_check(gl.egl, eglCreateSyncKHR) ||
@@ -389,7 +389,7 @@ const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames,
 
 	glGenTextures(1, &gl.tex);
 
-	gl.egl->draw = draw_cube_video;
+	cube.draw = draw_cube_video;
 
-	return gl.egl;
+	return &cube;
 }

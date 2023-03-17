@@ -67,7 +67,7 @@ struct drm {
 	unsigned int count;
 	bool nonblocking;
 
-	int (*run)(const struct gbm *gbm, const struct egl *egl);
+	int (*run)(const struct gbm *gbm, const struct egl *egl, const struct cube *cube);
 };
 
 struct drm_fb {

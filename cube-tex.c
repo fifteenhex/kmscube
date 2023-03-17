@@ -30,8 +30,10 @@
 #include "common.h"
 #include "esUtil.h"
 
+static struct cube cube;
+
 static struct {
-	struct egl *egl;
+	const struct egl *egl;
 
 	GLfloat aspect;
 	enum mode mode;
@@ -570,15 +572,13 @@ static void draw_cube_tex(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 }
 
-const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samples)
+const struct cube * init_cube_tex(const struct egl *egl, const struct gbm *gbm, enum mode mode)
 {
 	const char *fragment_shader_source = (mode == NV12_2IMG) ?
 			fragment_shader_source_2img : fragment_shader_source_1img;
 	int ret;
 
-	gl.egl = init_egl(gbm, samples);
-	if (!gl.egl)
-		return NULL;
+	gl.egl = egl;
 
 	if (egl_check(gl.egl, eglCreateImageKHR) ||
 	    egl_check(gl.egl, glEGLImageTargetTexture2DOES) ||
@@ -641,7 +641,7 @@ const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samp
 		return NULL;
 	}
 
-	gl.egl->draw = draw_cube_tex;
+	cube.draw = draw_cube_tex;
 
-	return gl.egl;
+	return &cube;
 }

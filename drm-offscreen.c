@@ -34,7 +34,7 @@
 
 static struct drm drm;
 
-static int offscreen_run(const struct gbm *gbm, const struct egl *egl)
+static int offscreen_run(const struct gbm *gbm, const struct egl *egl, const struct cube *cube)
 {
 	struct gbm_bo *bo = NULL;
 	uint32_t i = 0;
@@ -57,7 +57,7 @@ static int offscreen_run(const struct gbm *gbm, const struct egl *egl)
 			glBindFramebuffer(GL_FRAMEBUFFER, egl->fbs[frame % NUM_BUFFERS].fb);
 		}
 
-		egl->draw(i++);
+		cube->draw(i++);
 
 		if (gbm->surface) {
 			eglSwapBuffers(egl->display, egl->surface);

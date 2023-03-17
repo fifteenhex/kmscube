@@ -27,10 +27,9 @@
 #include "common.h"
 #include "esUtil.h"
 
+static struct cube cube;
 
 static struct {
-	struct egl *egl;
-
 	GLfloat aspect;
 
 	GLuint program;
@@ -218,13 +217,11 @@ static void draw_cube_smooth(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 }
 
-const struct egl * init_cube_smooth(const struct gbm *gbm, int samples)
+const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gbm)
 {
 	int ret;
 
-	gl.egl = init_egl(gbm, samples);
-	if (!gl.egl)
-		return NULL;
+	(void)egl;
 
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
 
@@ -267,7 +264,7 @@ const struct egl * init_cube_smooth(const struct gbm *gbm, int samples)
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.colorsoffset);
 	glEnableVertexAttribArray(2);
 
-	gl.egl->draw = draw_cube_smooth;
+	cube.draw = draw_cube_smooth;
 
-	return gl.egl;
+	return &cube;
 }

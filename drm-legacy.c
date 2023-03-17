@@ -41,7 +41,7 @@ static void page_flip_handler(int fd, unsigned int frame,
 	*waiting_for_flip = 0;
 }
 
-static int legacy_run(const struct gbm *gbm, const struct egl *egl)
+static int legacy_run(const struct gbm *gbm, const struct egl *egl, const struct cube *cube)
 {
 	fd_set fds;
 	drmEventContext evctx = {
@@ -92,7 +92,7 @@ static int legacy_run(const struct gbm *gbm, const struct egl *egl)
 			glBindFramebuffer(GL_FRAMEBUFFER, egl->fbs[frame % NUM_BUFFERS].fb);
 		}
 
-		egl->draw(i++);
+		cube->draw(i++);
 
 		if (gbm->surface) {
 			eglSwapBuffers(egl->display, egl->surface);

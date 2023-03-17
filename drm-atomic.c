@@ -174,7 +174,7 @@ static EGLSyncKHR create_fence(const struct egl *egl, int fd)
 	return fence;
 }
 
-static int atomic_run(const struct gbm *gbm, const struct egl *egl)
+static int atomic_run(const struct gbm *gbm, const struct egl *egl, const struct cube *cube)
 {
 	struct gbm_bo *bo = NULL;
 	struct drm_fb *fb;
@@ -227,7 +227,7 @@ static int atomic_run(const struct gbm *gbm, const struct egl *egl)
 			glBindFramebuffer(GL_FRAMEBUFFER, egl->fbs[frame % NUM_BUFFERS].fb);
 		}
 
-		egl->draw(i++);
+		cube->draw(i++);
 
 		/* insert fence to be singled in cmdstream.. this fence will be
 		 * signaled when gpu rendering done
