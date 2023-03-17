@@ -35,6 +35,8 @@
 #include "common.h"
 
 static struct gbm gbm;
+static struct egl _egl;
+static struct egl *egl = &_egl;
 
 WEAK struct gbm_surface *
 gbm_surface_create_with_modifiers(struct gbm_device *gbm,
@@ -299,7 +301,7 @@ create_framebuffer(const struct egl *egl, struct gbm_bo *bo,
 	return true;
 }
 
-int init_egl(struct egl *egl, const struct gbm *gbm, int samples)
+struct egl * init_egl(const struct gbm *gbm, int samples)
 {
 	EGLint major, minor;
 
@@ -346,7 +348,7 @@ int init_egl(struct egl *egl, const struct gbm *gbm, int samples)
 
 	if (!eglInitialize(egl->display, &major, &minor)) {
 		printf("failed to initialize\n");
-		return -1;
+		return NULL;
 	}
 
 	egl_exts_dpy = eglQueryString(egl->display, EGL_EXTENSIONS);
@@ -374,20 +376,20 @@ int init_egl(struct egl *egl, const struct gbm *gbm, int samples)
 
 	if (!eglBindAPI(EGL_OPENGL_ES_API)) {
 		printf("failed to bind api EGL_OPENGL_ES_API\n");
-		return -1;
+		return NULL;
 	}
 
 	if (!egl_choose_config(egl->display, config_attribs, gbm->format,
                                &egl->config)) {
 		printf("failed to choose config\n");
-		return -1;
+		return NULL;
 	}
 
 	egl->context = eglCreateContext(egl->display, egl->config,
 			EGL_NO_CONTEXT, context_attribs);
 	if (egl->context == EGL_NO_CONTEXT) {
 		printf("failed to create context\n");
-		return -1;
+		return NULL;
 	}
 
 	if (!gbm->surface) {
@@ -397,7 +399,7 @@ int init_egl(struct egl *egl, const struct gbm *gbm, int samples)
 				(EGLNativeWindowType)gbm->surface, NULL);
 		if (egl->surface == EGL_NO_SURFACE) {
 			printf("failed to create egl surface\n");
-			return -1;
+			return NULL;
 		}
 	}
 
@@ -431,12 +433,12 @@ int init_egl(struct egl *egl, const struct gbm *gbm, int samples)
 		for (unsigned i = 0; i < ARRAY_SIZE(gbm->bos); i++) {
 			if (!create_framebuffer(egl, gbm->bos[i], &egl->fbs[i])) {
 				printf("failed to create framebuffer\n");
-				return -1;
+				return NULL;
 			}
 		}
 	}
 
-	return 0;
+	return egl;
 }
 
 int create_program(const char *vs_src, const char *fs_src)

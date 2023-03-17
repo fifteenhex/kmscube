@@ -31,7 +31,7 @@
 #include "esUtil.h"
 
 static struct {
-	struct egl egl;
+	struct egl *egl;
 
 	GLfloat aspect;
 	enum mode mode;
@@ -45,8 +45,6 @@ static struct {
 	GLuint positionsoffset, texcoordsoffset, normalsoffset;
 	GLuint tex[2];
 } gl;
-
-const struct egl *egl = &gl.egl;
 
 static const GLfloat vVertices[] = {
 		// front
@@ -338,7 +336,7 @@ static int init_tex_rgba(void)
 		EGL_NONE
 	};
 
-	if (egl->modifiers_supported &&
+	if (gl.egl->modifiers_supported &&
 	    modifier != DRM_FORMAT_MOD_INVALID) {
 		unsigned size =  ARRAY_SIZE(attr);
 		attr[size - 5] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
@@ -350,7 +348,7 @@ static int init_tex_rgba(void)
 
 	glGenTextures(1, gl.tex);
 
-	img = egl->eglCreateImageKHR(egl->display, EGL_NO_CONTEXT,
+	img = gl.egl->eglCreateImageKHR(gl.egl->display, EGL_NO_CONTEXT,
 			EGL_LINUX_DMA_BUF_EXT, NULL, attr);
 	assert(img);
 	glActiveTexture(GL_TEXTURE0);
@@ -359,9 +357,9 @@ static int init_tex_rgba(void)
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img);
+	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img);
 
-	egl->eglDestroyImageKHR(egl->display, img);
+	gl.egl->eglDestroyImageKHR(gl.egl->display, img);
 	close(fd);
 
 	return 0;
@@ -396,7 +394,7 @@ static int init_tex_nv12_2img(void)
 		EGL_NONE
 	};
 
-	if (egl->modifiers_supported &&
+	if (gl.egl->modifiers_supported &&
 	    modifier_y != DRM_FORMAT_MOD_INVALID &&
 	    modifier_uv != DRM_FORMAT_MOD_INVALID) {
 		unsigned size = ARRAY_SIZE(attr_y);
@@ -417,7 +415,7 @@ static int init_tex_nv12_2img(void)
 	glGenTextures(2, gl.tex);
 
 	/* Y plane texture: */
-	img_y = egl->eglCreateImageKHR(egl->display, EGL_NO_CONTEXT,
+	img_y = gl.egl->eglCreateImageKHR(gl.egl->display, EGL_NO_CONTEXT,
 			EGL_LINUX_DMA_BUF_EXT, NULL, attr_y);
 	assert(img_y);
 	glActiveTexture(GL_TEXTURE0);
@@ -426,13 +424,13 @@ static int init_tex_nv12_2img(void)
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img_y);
+	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img_y);
 
-	egl->eglDestroyImageKHR(egl->display, img_y);
+	gl.egl->eglDestroyImageKHR(gl.egl->display, img_y);
 	close(fd_y);
 
 	/* UV plane texture: */
-	img_uv = egl->eglCreateImageKHR(egl->display, EGL_NO_CONTEXT,
+	img_uv = gl.egl->eglCreateImageKHR(gl.egl->display, EGL_NO_CONTEXT,
 			EGL_LINUX_DMA_BUF_EXT, NULL, attr_uv);
 	assert(img_uv);
 	glActiveTexture(GL_TEXTURE1);
@@ -441,9 +439,9 @@ static int init_tex_nv12_2img(void)
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img_uv);
+	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img_uv);
 
-	egl->eglDestroyImageKHR(egl->display, img_uv);
+	gl.egl->eglDestroyImageKHR(gl.egl->display, img_uv);
 	close(fd_uv);
 
 	return 0;
@@ -473,7 +471,7 @@ static int init_tex_nv12_1img(void)
 	};
 	EGLImage img;
 
-	if (egl->modifiers_supported &&
+	if (gl.egl->modifiers_supported &&
 	    modifier_y != DRM_FORMAT_MOD_INVALID &&
 	    modifier_uv != DRM_FORMAT_MOD_INVALID) {
 		unsigned size = ARRAY_SIZE(attr);
@@ -489,7 +487,7 @@ static int init_tex_nv12_1img(void)
 
 	glGenTextures(1, gl.tex);
 
-	img = egl->eglCreateImageKHR(egl->display, EGL_NO_CONTEXT,
+	img = gl.egl->eglCreateImageKHR(gl.egl->display, EGL_NO_CONTEXT,
 			EGL_LINUX_DMA_BUF_EXT, NULL, attr);
 	assert(img);
 	glActiveTexture(GL_TEXTURE0);
@@ -498,9 +496,9 @@ static int init_tex_nv12_1img(void)
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img);
+	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, img);
 
-	egl->eglDestroyImageKHR(egl->display, img);
+	gl.egl->eglDestroyImageKHR(gl.egl->display, img);
 	close(fd_y);
 	close(fd_uv);
 
@@ -578,13 +576,13 @@ const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samp
 			fragment_shader_source_2img : fragment_shader_source_1img;
 	int ret;
 
-	ret = init_egl(&gl.egl, gbm, samples);
-	if (ret)
+	gl.egl = init_egl(gbm, samples);
+	if (!gl.egl)
 		return NULL;
 
-	if (egl_check(&gl.egl, eglCreateImageKHR) ||
-	    egl_check(&gl.egl, glEGLImageTargetTexture2DOES) ||
-	    egl_check(&gl.egl, eglDestroyImageKHR))
+	if (egl_check(gl.egl, eglCreateImageKHR) ||
+	    egl_check(gl.egl, glEGLImageTargetTexture2DOES) ||
+	    egl_check(gl.egl, eglDestroyImageKHR))
 		return NULL;
 
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
@@ -643,7 +641,7 @@ const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samp
 		return NULL;
 	}
 
-	gl.egl.draw = draw_cube_tex;
+	gl.egl->draw = draw_cube_tex;
 
-	return &gl.egl;
+	return gl.egl;
 }

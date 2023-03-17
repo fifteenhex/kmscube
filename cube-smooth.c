@@ -29,7 +29,7 @@
 
 
 static struct {
-	struct egl egl;
+	struct egl *egl;
 
 	GLfloat aspect;
 
@@ -222,8 +222,8 @@ const struct egl * init_cube_smooth(const struct gbm *gbm, int samples)
 {
 	int ret;
 
-	ret = init_egl(&gl.egl, gbm, samples);
-	if (ret)
+	gl.egl = init_egl(gbm, samples);
+	if (!gl.egl)
 		return NULL;
 
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
@@ -267,7 +267,7 @@ const struct egl * init_cube_smooth(const struct gbm *gbm, int samples)
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.colorsoffset);
 	glEnableVertexAttribArray(2);
 
-	gl.egl.draw = draw_cube_smooth;
+	gl.egl->draw = draw_cube_smooth;
 
-	return &gl.egl;
+	return gl.egl;
 }

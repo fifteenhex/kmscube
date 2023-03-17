@@ -32,7 +32,7 @@
 #include "esUtil.h"
 
 static struct {
-	struct egl egl;
+	struct egl *egl;
 
 	GLfloat aspect;
 	const struct gbm *gbm;
@@ -52,8 +52,6 @@ static struct {
 
 	EGLSyncKHR last_fence;
 } gl;
-
-static const struct egl *egl = &gl.egl;
 
 static const GLfloat vVertices[] = {
 		// front
@@ -226,8 +224,8 @@ static void draw_cube_video(unsigned i)
 	EGLImage frame;
 
 	if (gl.last_fence) {
-		egl->eglClientWaitSyncKHR(egl->display, gl.last_fence, 0, EGL_FOREVER_KHR);
-		egl->eglDestroySyncKHR(egl->display, gl.last_fence);
+		gl.egl->eglClientWaitSyncKHR(gl.egl->display, gl.last_fence, 0, EGL_FOREVER_KHR);
+		gl.egl->eglDestroySyncKHR(gl.egl->display, gl.last_fence);
 		gl.last_fence = NULL;
 	}
 
@@ -238,7 +236,7 @@ static void draw_cube_video(unsigned i)
 		glGenTextures(1, &gl.tex);
 		video_deinit(gl.decoder);
 		gl.idx = (gl.idx + 1) % gl.filenames_count;
-		gl.decoder = video_init(&gl.egl, gl.gbm, gl.filenames[gl.idx]);
+		gl.decoder = video_init(gl.egl, gl.gbm, gl.filenames[gl.idx]);
 	}
 
 	glUseProgram(gl.blit_program);
@@ -249,7 +247,7 @@ static void draw_cube_video(unsigned i)
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, frame);
+	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, frame);
 
 	/* clear the color buffer */
 	glClearColor(0.5, 0.5, 0.5, 1.0);
@@ -298,7 +296,7 @@ static void draw_cube_video(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 
-	gl.last_fence = egl->eglCreateSyncKHR(egl->display, EGL_SYNC_FENCE_KHR, NULL);
+	gl.last_fence = gl.egl->eglCreateSyncKHR(gl.egl->display, EGL_SYNC_FENCE_KHR, NULL);
 }
 
 const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames, int samples)
@@ -306,14 +304,14 @@ const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames,
 	char *fnames, *s;
 	int ret, i = 0;
 
-	ret = init_egl(&gl.egl, gbm, samples);
-	if (ret)
+	gl.egl = init_egl(gbm, samples);
+	if (!gl.egl)
 		return NULL;
 
-	if (egl_check(&gl.egl, glEGLImageTargetTexture2DOES) ||
-	    egl_check(egl, eglCreateSyncKHR) ||
-	    egl_check(egl, eglDestroySyncKHR) ||
-	    egl_check(egl, eglClientWaitSyncKHR))
+	if (egl_check(gl.egl, glEGLImageTargetTexture2DOES) ||
+	    egl_check(gl.egl, eglCreateSyncKHR) ||
+	    egl_check(gl.egl, eglDestroySyncKHR) ||
+	    egl_check(gl.egl, eglClientWaitSyncKHR))
 		return NULL;
 
 	fnames = strdup(filenames);
@@ -326,7 +324,7 @@ const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames,
 	gl.filenames[i] = fnames;
 	gl.filenames_count = ++i;
 
-	gl.decoder = video_init(&gl.egl, gbm, gl.filenames[gl.idx]);
+	gl.decoder = video_init(gl.egl, gbm, gl.filenames[gl.idx]);
 	if (!gl.decoder) {
 		printf("cannot create video decoder\n");
 		return NULL;
@@ -391,7 +389,7 @@ const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames,
 
 	glGenTextures(1, &gl.tex);
 
-	gl.egl.draw = draw_cube_video;
+	gl.egl->draw = draw_cube_video;
 
-	return &gl.egl;
+	return gl.egl;
 }

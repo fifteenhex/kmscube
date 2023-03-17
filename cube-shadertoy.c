@@ -40,7 +40,7 @@
 #include "esUtil.h"
 
 static struct {
-	struct egl egl;
+	struct egl *egl;
 
 	/* Shadertoy rendering (to FBO): */
 	GLuint stoy_program;
@@ -401,8 +401,8 @@ const struct egl * init_cube_shadertoy(const struct gbm *gbm, const char *file, 
 {
 	int ret;
 
-	ret = init_egl(&gl.egl, gbm, samples);
-	if (ret)
+	gl.egl = init_egl(gbm, samples);
+	if (!gl.egl)
 		return NULL;
 
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
@@ -453,7 +453,7 @@ const struct egl * init_cube_shadertoy(const struct gbm *gbm, const char *file, 
 		return NULL;
 	}
 
-	gl.egl.draw = draw_cube_shadertoy;
+	gl.egl->draw = draw_cube_shadertoy;
 
-	return &gl.egl;
+	return gl.egl;
 }
