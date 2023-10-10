@@ -694,11 +694,6 @@ init_cube_gears(const struct gbm *gbm, int samples)
 	if (ret)
 		return NULL;
 
-	if (egl_check(&gl.egl, eglCreateImageKHR) ||
-	    egl_check(&gl.egl, glEGLImageTargetTexture2DOES) ||
-	    egl_check(&gl.egl, eglDestroyImageKHR))
-		return NULL;
-
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
 	gl.gbm = gbm;
 
