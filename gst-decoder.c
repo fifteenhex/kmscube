@@ -332,32 +332,6 @@ set_last_frame(struct decoder *dec, EGLImage frame, GstSample *samp)
 	dec->last_samp = samp;
 }
 
-// TODO this could probably be a helper re-used by cube-tex:
-static int
-buf_to_fd(const struct gbm *gbm, int size, void *ptr)
-{
-	struct gbm_bo *bo;
-	void *map, *map_data = NULL;
-	uint32_t stride;
-	int fd;
-
-	/* NOTE: do not actually use GBM_BO_USE_WRITE since that gets us a dumb buffer: */
-	bo = gbm_bo_create(gbm->dev, size, 1, GBM_FORMAT_R8, GBM_BO_USE_LINEAR);
-
-	map = gbm_bo_map(bo, 0, 0, size, 1, GBM_BO_TRANSFER_WRITE, &stride, &map_data);
-
-	memcpy(map, ptr, size);
-
-	gbm_bo_unmap(bo, map_data);
-
-	fd = gbm_bo_get_fd(bo);
-
-	/* we have the fd now, no longer need the bo: */
-	gbm_bo_destroy(bo);
-
-	return fd;
-}
-
 static EGLImage
 buffer_to_image(struct decoder *dec, GstBuffer *buf)
 {
@@ -413,7 +387,9 @@ buffer_to_image(struct decoder *dec, GstBuffer *buf)
 	} else {
 		GstMapInfo map_info;
 		gst_buffer_map(buf, &map_info, GST_MAP_READ);
-		dmabuf_fd = buf_to_fd(dec->gbm, map_info.size, map_info.data);
+		uint32_t stride;
+		uint64_t modifier;
+		dmabuf_fd = buf_to_fd(dec->gbm, map_info.size, 1, 1, map_info.data, &stride, &modifier);
 		gst_buffer_unmap(buf, &map_info);
 	}
 

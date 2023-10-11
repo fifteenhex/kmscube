@@ -38,6 +38,9 @@ static struct gbm gbm;
 static struct egl _egl;
 static struct egl *egl = &_egl;
 
+WEAK uint64_t
+gbm_bo_get_modifier(struct gbm_bo *bo);
+
 WEAK struct gbm_surface *
 gbm_surface_create_with_modifiers(struct gbm_device *gbm,
                                   uint32_t width, uint32_t height,
@@ -535,4 +538,56 @@ int64_t get_time_ns(void)
 	struct timespec tv;
 	clock_gettime(CLOCK_MONOTONIC, &tv);
 	return tv.tv_nsec + tv.tv_sec * NSEC_PER_SEC;
+}
+
+int buf_to_fd(const struct gbm *gbm,
+              uint32_t width, uint32_t height, uint32_t bpp, const void *ptr,
+              uint32_t *pstride, uint64_t *modifier)
+{
+	const uint8_t *src = (const uint8_t *)ptr;
+	uint32_t format;
+	struct gbm_bo *bo;
+	void *map_data = NULL;
+	uint32_t stride;
+	uint8_t *map;
+	int fd;
+
+	switch (bpp) {
+	case 1:
+		format = GBM_FORMAT_R8;
+		break;
+	case 2:
+		format = GBM_FORMAT_GR88;
+		break;
+	case 4:
+		format = GBM_FORMAT_ABGR8888;
+		break;
+	default:
+		assert(!"unreachable");
+		return -1;
+	}
+
+	bo = gbm_bo_create(gbm->dev, width, height, format, GBM_BO_USE_LINEAR);
+
+	map = gbm_bo_map(bo, 0, 0, width, height, GBM_BO_TRANSFER_WRITE, &stride, &map_data);
+
+	for (uint32_t i = 0; i < height; i++) {
+		memcpy(&map[stride * i], &src[width * bpp * i], width * bpp);
+	}
+
+	gbm_bo_unmap(bo, map_data);
+
+	fd = gbm_bo_get_fd(bo);
+
+	if (gbm_bo_get_modifier)
+		*modifier = gbm_bo_get_modifier(bo);
+	else
+		*modifier = DRM_FORMAT_MOD_LINEAR;
+
+	/* we have the fd now, no longer need the bo: */
+	gbm_bo_destroy(bo);
+
+	*pstride = stride;
+
+	return fd;
 }

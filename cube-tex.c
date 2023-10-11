@@ -212,120 +212,14 @@ static const char *fragment_shader_source_2img =
 		"}                                              \n";
 
 static const uint32_t texw = 512, texh = 512;
-
-WEAK uint64_t
-gbm_bo_get_modifier(struct gbm_bo *bo);
-
-static int get_fd_rgba(uint32_t *pstride, uint64_t *modifier)
-{
-	struct gbm_bo *bo;
-	void *map_data = NULL;
-	uint32_t stride;
-	extern const uint32_t raw_512x512_rgba[];
-	uint8_t *map, *src = (uint8_t *)raw_512x512_rgba;
-	int fd;
-
-	/* NOTE: do not actually use GBM_BO_USE_WRITE since that gets us a dumb buffer: */
-	bo = gbm_bo_create(gl.gbm->dev, texw, texh, GBM_FORMAT_ABGR8888, GBM_BO_USE_LINEAR);
-
-	map = gbm_bo_map(bo, 0, 0, texw, texh, GBM_BO_TRANSFER_WRITE, &stride, &map_data);
-
-	for (uint32_t i = 0; i < texh; i++) {
-		memcpy(&map[stride * i], &src[texw * 4 * i], texw * 4);
-	}
-
-	gbm_bo_unmap(bo, map_data);
-
-	fd = gbm_bo_get_fd(bo);
-
-	if (gbm_bo_get_modifier)
-		*modifier = gbm_bo_get_modifier(bo);
-	else
-		*modifier = DRM_FORMAT_MOD_LINEAR;
-
-	/* we have the fd now, no longer need the bo: */
-	gbm_bo_destroy(bo);
-
-	*pstride = stride;
-
-	return fd;
-}
-
-static int get_fd_y(uint32_t *pstride, uint64_t *modifier)
-{
-	struct gbm_bo *bo;
-	void *map_data = NULL;
-	uint32_t stride;
-	extern const uint32_t raw_512x512_nv12[];
-	uint8_t *map, *src = (uint8_t *)raw_512x512_nv12;
-	int fd;
-
-	/* NOTE: do not actually use GBM_BO_USE_WRITE since that gets us a dumb buffer: */
-	bo = gbm_bo_create(gl.gbm->dev, texw, texh, GBM_FORMAT_R8, GBM_BO_USE_LINEAR);
-
-	map = gbm_bo_map(bo, 0, 0, texw, texh, GBM_BO_TRANSFER_WRITE, &stride, &map_data);
-
-	for (uint32_t i = 0; i < texh; i++) {
-		memcpy(&map[stride * i], &src[texw * i], texw);
-	}
-
-	gbm_bo_unmap(bo, map_data);
-
-	fd = gbm_bo_get_fd(bo);
-
-	if (gbm_bo_get_modifier)
-		*modifier = gbm_bo_get_modifier(bo);
-	else
-		*modifier = DRM_FORMAT_MOD_LINEAR;
-
-	/* we have the fd now, no longer need the bo: */
-	gbm_bo_destroy(bo);
-
-	*pstride = stride;
-
-	return fd;
-}
-
-static int get_fd_uv(uint32_t *pstride, uint64_t *modifier)
-{
-	struct gbm_bo *bo;
-	void *map_data = NULL;
-	uint32_t stride;
-	extern const uint32_t raw_512x512_nv12[];
-	uint8_t *map, *src = &((uint8_t *)raw_512x512_nv12)[texw * texh];
-	int fd;
-
-	/* NOTE: do not actually use GBM_BO_USE_WRITE since that gets us a dumb buffer: */
-	bo = gbm_bo_create(gl.gbm->dev, texw/2, texh/2, GBM_FORMAT_GR88, GBM_BO_USE_LINEAR);
-
-	map = gbm_bo_map(bo, 0, 0, texw/2, texh/2, GBM_BO_TRANSFER_WRITE, &stride, &map_data);
-
-	for (uint32_t i = 0; i < texh/2; i++) {
-		memcpy(&map[stride * i], &src[texw * i], texw);
-	}
-
-	gbm_bo_unmap(bo, map_data);
-
-	fd = gbm_bo_get_fd(bo);
-
-	if (gbm_bo_get_modifier)
-		*modifier = gbm_bo_get_modifier(bo);
-	else
-		*modifier = DRM_FORMAT_MOD_LINEAR;
-
-	/* we have the fd now, no longer need the bo: */
-	gbm_bo_destroy(bo);
-
-	*pstride = stride;
-
-	return fd;
-}
+extern const uint32_t raw_512x512_rgba[];
+extern const uint32_t raw_512x512_nv12[];
 
 static int init_tex_rgba(void)
 {
 	uint32_t stride;
 	uint64_t modifier;
-	int fd = get_fd_rgba(&stride, &modifier);
+	int fd = buf_to_fd(gl.gbm, texw, texh, 4, raw_512x512_rgba, &stride, &modifier);
 	EGLint attr[] = {
 		EGL_WIDTH, texw,
 		EGL_HEIGHT, texh,
@@ -371,8 +265,8 @@ static int init_tex_nv12_2img(void)
 {
 	uint32_t stride_y, stride_uv;
 	uint64_t modifier_y, modifier_uv;
-	int fd_y = get_fd_y(&stride_y, &modifier_y);
-	int fd_uv = get_fd_uv(&stride_uv, &modifier_uv);
+	int fd_y = buf_to_fd(gl.gbm, texw, texh, 1, raw_512x512_nv12, &stride_y, &modifier_y);
+	int fd_uv = buf_to_fd(gl.gbm, texw/2, texh/2, 2, &((uint8_t *)raw_512x512_nv12)[texw * texh], &stride_uv, &modifier_uv);
 	EGLint attr_y[] = {
 		EGL_WIDTH, texw,
 		EGL_HEIGHT, texh,
@@ -453,8 +347,8 @@ static int init_tex_nv12_1img(void)
 {
 	uint32_t stride_y, stride_uv;
 	uint64_t modifier_y, modifier_uv;
-	int fd_y = get_fd_y(&stride_y, &modifier_y);
-	int fd_uv = get_fd_uv(&stride_uv, &modifier_uv);
+	int fd_y = buf_to_fd(gl.gbm, texw, texh, 1, raw_512x512_nv12, &stride_y, &modifier_y);
+	int fd_uv = buf_to_fd(gl.gbm, texw/2, texh/2, 2, &((uint8_t *)raw_512x512_nv12)[texw * texh], &stride_uv, &modifier_uv);
 	EGLint attr[] = {
 		EGL_WIDTH, texw,
 		EGL_HEIGHT, texh,

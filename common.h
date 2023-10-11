@@ -223,4 +223,8 @@ void finish_fpscntrs(void);
 
 int64_t get_time_ns(void);
 
+int buf_to_fd(const struct gbm *gbm,
+              uint32_t width, uint32_t height, uint32_t bpp, const void *ptr,
+              uint32_t *pstride, uint64_t *modifier);
+
 #endif /* _COMMON_H */
