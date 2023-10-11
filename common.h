@@ -213,8 +213,9 @@ init_cube_video(const struct egl *egl, const struct gbm *gbm, const char *video)
 void init_perfcntrs(const struct egl *egl, const char *perfcntrs);
 void start_perfcntrs(void);
 void end_perfcntrs(void);
-void finish_perfcntrs(void);
-void dump_perfcntrs(unsigned nframes, uint64_t elapsed_time_ns);
+void start_fpscntrs(void);
+void end_fpscntrs(void);
+void finish_fpscntrs(void);
 
 #define NSEC_PER_SEC (INT64_C(1000) * USEC_PER_SEC)
 #define USEC_PER_SEC (INT64_C(1000) * MSEC_PER_SEC)

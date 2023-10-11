@@ -32,6 +32,9 @@
 
 #include "common.h"
 
+static int64_t start_time, report_time, cur_time;
+static unsigned int frames;
+
 /* Module to collect a specified set of performance counts, and accumulate
  * results, using the GL_AMD_performance_monitor extension.
  *
@@ -431,7 +434,13 @@ void finish_perfcntrs(void)
 	}
 }
 
-void dump_perfcntrs(unsigned nframes, uint64_t elapsed_time_ns)
+static double elapsed_secs(void)
+{
+	double elapsed_time = cur_time - start_time;
+	return elapsed_time / (double)NSEC_PER_SEC;
+}
+
+static void dump_perfcntrs(unsigned nframes)
 {
 	if (!perfcntr.egl) {
 		return;
@@ -447,7 +456,7 @@ void dump_perfcntrs(unsigned nframes, uint64_t elapsed_time_ns)
 	printf("\n");
 
 	/* print results: */
-	double secs = elapsed_time_ns / (double)NSEC_PER_SEC;
+	double secs = elapsed_secs();
 	printf("%f", (double)nframes/secs);
 	for (unsigned i = 0; i < perfcntr.num_counters; i++) {
 		struct counter *c = &perfcntr.counters[i];
@@ -472,4 +481,50 @@ void dump_perfcntrs(unsigned nframes, uint64_t elapsed_time_ns)
 		}
 	}
 	printf("\n");
+}
+
+void start_fpscntrs(void)
+{
+	start_time = report_time = get_time_ns();
+}
+
+static void print_fpscntrs(void)
+{
+	double secs = elapsed_secs();
+	printf("Rendered %u frames in %f sec (%f fps)\n",
+		frames, secs, (double)frames/secs);
+}
+
+void end_fpscntrs(void)
+{
+	static bool first_frame = true;
+
+	/* Start fps measuring on second frame, to remove the time spent
+	 * compiling shader, etc, from the fps:
+	 */
+	if (first_frame) {
+		first_frame = false;
+		start_fpscntrs();
+		return;
+	}
+
+	frames++;
+
+	cur_time = get_time_ns();
+	if (cur_time > (report_time + 2 * NSEC_PER_SEC)) {
+		print_fpscntrs();
+		report_time = cur_time;
+	}
+
+	return;
+}
+
+void finish_fpscntrs(void)
+{
+	finish_perfcntrs();
+
+	cur_time = get_time_ns();
+	print_fpscntrs();
+
+	dump_perfcntrs(frames);
 }
