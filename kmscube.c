@@ -76,6 +76,9 @@ static void usage(const char *name)
 			"        rgba      -  rgba textured cube\n"
 			"        nv12-2img -  yuv textured (color conversion in shader)\n"
 			"        nv12-1img -  yuv textured (single nv12 texture)\n"
+#ifdef HAVE_GLES3
+			"        compress  -  compress texture (GL_EXT_texture_storage_compression)\n"
+#endif
 			"    -m, --modifier=MODIFIER  hardcode the selected modifier\n"
 			"    -n, --connector_id=N     use connector ID N (see drm_info)\n"
 			"    -O, --offscreen          use offscreen rendering (e.g. for render nodes)\n"
@@ -157,6 +160,10 @@ int main(int argc, char *argv[])
 				mode = NV12_2IMG;
 			} else if (strcmp(optarg, "nv12-1img") == 0) {
 				mode = NV12_1IMG;
+#ifdef HAVE_GLES3
+			} else if (strcmp(optarg, "compress") == 0) {
+				mode = COMPRESS;
+#endif
 			} else {
 				printf("invalid mode: %s\n", optarg);
 				usage(argv[0]);

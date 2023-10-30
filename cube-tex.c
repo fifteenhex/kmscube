@@ -173,6 +173,20 @@ static const char *vertex_shader_source =
 		"    vTexCoord = in_TexCoord; \n"
 		"}                            \n";
 
+static const char *fragment_shader_source_0img =
+		"#extension GL_OES_EGL_image_external : enable\n"
+		"precision mediump float;           \n"
+		"                                   \n"
+		"uniform sampler2D uTex;            \n"
+		"                                   \n"
+		"varying vec4 vVaryingColor;        \n"
+		"varying vec2 vTexCoord;            \n"
+		"                                   \n"
+		"void main()                        \n"
+		"{                                  \n"
+		"    gl_FragColor = vVaryingColor * texture2D(uTex, vTexCoord);\n"
+		"}                                  \n";
+
 static const char *fragment_shader_source_1img =
 		"#extension GL_OES_EGL_image_external : enable\n"
 		"precision mediump float;           \n"
@@ -367,6 +381,61 @@ static int init_tex_rgba(void)
 	return 0;
 }
 
+#ifdef HAVE_GLES3
+static int enum_to_fixed_rate(GLint rate)
+{
+	switch (rate) {
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_1BPC_EXT: return 1;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_2BPC_EXT: return 2;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_3BPC_EXT: return 3;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_4BPC_EXT: return 4;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_5BPC_EXT: return 5;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_6BPC_EXT: return 6;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_7BPC_EXT: return 7;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_8BPC_EXT: return 8;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_9BPC_EXT: return 9;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_10BPC_EXT: return 10;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_11BPC_EXT: return 11;
+	case GL_SURFACE_COMPRESSION_FIXED_RATE_12BPC_EXT: return 12;
+	default: return 0;
+	}
+}
+
+static int init_tex_compress(void)
+{
+	extern const uint32_t raw_512x512_rgba[];
+	uint8_t *data = (uint8_t *)raw_512x512_rgba;
+	GLint rates[16], num_rates = 0, actual_rate;
+	GLint attribs[3] = {GL_SURFACE_COMPRESSION_EXT, GL_SURFACE_COMPRESSION_FIXED_RATE_DEFAULT_EXT,
+	                    GL_NONE};
+
+	glGenTextures(1, gl.tex);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, gl.tex[0]);
+
+	glGetInternalformativ(GL_RENDERBUFFER, GL_RGBA8, GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT, 1, &num_rates);
+	glGetInternalformativ(GL_RENDERBUFFER, GL_RGBA8, GL_SURFACE_COMPRESSION_EXT, num_rates, rates);
+
+	printf("There are %i supported fixed-rate compression rate(s)\n", num_rates);
+	for (int i = 0; i < num_rates; i++)
+		printf("\t%i bpc\n", enum_to_fixed_rate(rates[i]));
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	egl->glTexStorageAttribs2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, texw, texh, attribs);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_SURFACE_COMPRESSION_EXT, &actual_rate);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texw, texh, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	printf("Actual (default) compression rate is: %i bpc (0x%X)\n",
+	       enum_to_fixed_rate(actual_rate), actual_rate);
+
+	return 0;
+}
+#endif
+
 static int init_tex_nv12_2img(void)
 {
 	uint32_t stride_y, stride_uv;
@@ -516,6 +585,8 @@ static int init_tex(enum mode mode)
 		return init_tex_nv12_2img();
 	case NV12_1IMG:
 		return init_tex_nv12_1img();
+	case COMPRESS:
+		return init_tex_compress();
 	default:
 		assert(!"unreachable");
 		return -1;
@@ -574,8 +645,9 @@ static void draw_cube_tex(unsigned i)
 
 const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samples)
 {
-	const char *fragment_shader_source = (mode == NV12_2IMG) ?
-			fragment_shader_source_2img : fragment_shader_source_1img;
+	const char *fragment_shader_source = (mode == NV12_2IMG) ? fragment_shader_source_2img :
+		                                  ((mode == COMPRESS) ? fragment_shader_source_0img :
+													 fragment_shader_source_1img);
 	int ret;
 
 	ret = init_egl(&gl.egl, gbm, samples);
@@ -585,6 +657,8 @@ const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode, int samp
 	if (egl_check(&gl.egl, eglCreateImageKHR) ||
 	    egl_check(&gl.egl, glEGLImageTargetTexture2DOES) ||
 	    egl_check(&gl.egl, eglDestroyImageKHR))
+
+	if (mode == COMPRESS && egl_check(&gl.egl, glTexStorageAttribs2DEXT))
 		return NULL;
 
 	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
