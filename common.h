@@ -24,8 +24,12 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#ifdef HAVE_GLES3
+#include <GLES3/gl3.h>
+#else
 #ifndef GL_ES_VERSION_2_0
 #include <GLES2/gl2.h>
+#endif
 #endif
 #include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
@@ -96,6 +100,31 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurfaceEXT (EGLDisplay dpy,
 #define EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT 0x344A
 #endif
 
+#ifndef GL_EXT_texture_storage_compression
+#define GL_EXT_texture_storage_compression 1
+#define GL_NUM_SURFACE_COMPRESSION_FIXED_RATES_EXT 0x8F6E
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_NONE_EXT 0x96C1
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_DEFAULT_EXT 0x96C2
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_1BPC_EXT 0x96C4
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_2BPC_EXT 0x96C5
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_3BPC_EXT 0x96C6
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_4BPC_EXT 0x96C7
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_5BPC_EXT 0x96C8
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_6BPC_EXT 0x96C9
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_7BPC_EXT 0x96CA
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_8BPC_EXT 0x96CB
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_9BPC_EXT 0x96CC
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_10BPC_EXT 0x96CD
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_11BPC_EXT 0x96CE
+#define GL_SURFACE_COMPRESSION_FIXED_RATE_12BPC_EXT 0x96CF
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGEATTRIBS2DEXTPROC) (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, const GLint* attrib_list);
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGEATTRIBS3DEXTPROC) (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, const GLint* attrib_list);
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL void GL_APIENTRY glTexStorageAttribs2DEXT (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, const GLint* attrib_list);
+GL_APICALL void GL_APIENTRY glTexStorageAttribs3DEXT (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, const GLint* attrib_list);
+#endif
+#endif /* GL_EXT_texture_storage_compression */
+
 #define NUM_BUFFERS 2
 
 struct gbm {
@@ -144,6 +173,8 @@ struct egl {
 	PFNGLENDPERFMONITORAMDPROC               glEndPerfMonitorAMD;
 	PFNGLGETPERFMONITORCOUNTERDATAAMDPROC    glGetPerfMonitorCounterDataAMD;
 
+	PFNGLTEXSTORAGEATTRIBS2DEXTPROC          glTexStorageAttribs2DEXT;
+
 	bool modifiers_supported;
 
 	void (*draw)(unsigned i);
@@ -171,6 +202,7 @@ enum mode {
 	NV12_1IMG,     /* NV12, imported as planar YUV eglimg */
 	VIDEO,         /* video textured cube */
 	SHADERTOY,     /* display shadertoy shader */
+	COMPRESS,      /* compress RGBA texture with GL_EXT_texture_storage_compression */
 };
 
 const struct egl * init_cube_smooth(const struct gbm *gbm, int samples);

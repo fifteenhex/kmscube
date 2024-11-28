@@ -427,6 +427,8 @@ int init_egl(struct egl *egl, const struct gbm *gbm, int samples)
 	get_proc_gl(GL_AMD_performance_monitor, glEndPerfMonitorAMD);
 	get_proc_gl(GL_AMD_performance_monitor, glGetPerfMonitorCounterDataAMD);
 
+	get_proc_gl(GL_EXT_texture_storage_compression, glTexStorageAttribs2DEXT);
+
 	if (!gbm->surface) {
 		for (unsigned i = 0; i < ARRAY_SIZE(gbm->bos); i++) {
 			if (!create_framebuffer(egl, gbm->bos[i], &egl->fbs[i])) {
