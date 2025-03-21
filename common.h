@@ -217,6 +217,16 @@ init_cube_video(const struct egl *egl, const struct gbm *gbm, const char *video)
 }
 #endif
 
+#ifdef HAVE_LIBPNG
+void write_png_file(char *filename, int width, int height, uint8_t *buffer);
+#else
+static inline void write_png_file(char *filename, int width, int height, uint8_t *buffer)
+{
+	(void)filename; (void)width; (void)height, (void)buffer;
+	printf("no PNG support!\n");
+}
+#endif
+
 void init_perfcntrs(const struct egl *egl, const char *perfcntrs);
 void start_perfcntrs(void);
 void end_perfcntrs(void);

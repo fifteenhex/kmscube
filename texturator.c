@@ -32,10 +32,6 @@
 #include <GLES3/gl3.h>
 #include <GLES2/gl2ext.h>
 
-#ifdef HAVE_LIBPNG
-#include <png.h>
-#endif
-
 #include "common.h"
 #include "drm-common.h"
 
@@ -664,41 +660,6 @@ static bool check_quads(void)
 
 	return err;
 }
-
-#ifdef HAVE_LIBPNG
-static void write_png_file(char *filename, int width, int height, uint8_t *buffer)
-{
-	FILE *fp = fopen(filename, "wb");
-	png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	png_infop info = png_create_info_struct(png);
-
-	png_init_io(png, fp);
-
-	png_set_IHDR(
-		png,
-		info,
-		width, height,
-		8,
-		PNG_COLOR_TYPE_RGBA,
-		PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_BASE,
-		PNG_FILTER_TYPE_BASE
-	);
-	png_write_info(png, info);
-
-	png_bytepp rows = (png_bytepp)png_malloc(png, height * sizeof(png_bytep));
-	for (int i = 0; i < height; i++)
-    	rows[i] = (png_bytep)(buffer + (height - i - 1) * width * 4);
-
-	png_write_image(png, rows);
-
-	png_write_end(png, NULL);
-
-	fclose(fp);
-	png_destroy_write_struct(&png, &info);
-  	free(rows);
-}
-#endif
 
 static bool needs_check = true;
 
