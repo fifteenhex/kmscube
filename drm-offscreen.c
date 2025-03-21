@@ -65,6 +65,14 @@ static int offscreen_run(const struct gbm *gbm, const struct egl *egl, const str
 
 		end_fpscntrs();
 
+		if (drm.pixels) {
+			char pngname[64];
+			glReadPixels(0, 0, drm.mode->hdisplay, drm.mode->vdisplay, GL_RGBA, GL_UNSIGNED_BYTE, drm.pixels);
+			size_t r = snprintf(pngname, sizeof(pngname), "kmscube-%03d.png", frame);
+			assert(r < sizeof(pngname));
+			write_png_file(pngname, drm.mode->hdisplay, drm.mode->vdisplay, drm.pixels);
+		}
+
 		/* release last buffer to render on again: */
 		if (bo && gbm->surface)
 			gbm_surface_release_buffer(gbm->surface, bo);
@@ -76,11 +84,11 @@ static int offscreen_run(const struct gbm *gbm, const struct egl *egl, const str
 	return 0;
 }
 
-const struct drm * init_drm_offscreen(const char *device, const char *mode_str, unsigned int count)
+const struct drm * init_drm_offscreen(const char *device, const char *mode_str, unsigned int count, bool write)
 {
 	int ret;
 
-	ret = init_drm_render(&drm, device, mode_str, count);
+	ret = init_drm_render(&drm, device, mode_str, count, write);
 	if (ret)
 		return NULL;
 

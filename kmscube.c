@@ -42,7 +42,7 @@ static const struct gbm *gbm;
 static const struct drm *drm;
 static const struct cube *cube;
 
-static const char *shortopts = "Ac:D:f:gM:m:n:NOp:S:s:V:v:x";
+static const char *shortopts = "Ac:D:f:gM:m:n:NOp:S:s:V:v:wx";
 
 static const struct option longopts[] = {
 	{"atomic", no_argument,       0, 'A'},
@@ -59,6 +59,7 @@ static const struct option longopts[] = {
 	{"video",  required_argument, 0, 'V'},
 	{"vmode",  required_argument, 0, 'v'},
 	{"surfaceless", no_argument,  0, 'x'},
+	{"write",       no_argument,  0, 'w'},
 	{"nonblocking", no_argument,  0, 'N'},
 	{0, 0, 0, 0}
 };
@@ -89,6 +90,7 @@ static void usage(const char *name)
 			"    -V, --video=FILE         video textured cube (comma separated list)\n"
 			"    -v, --vmode=VMODE        specify the video mode in the format\n"
 			"                             <mode>[-<vrefresh>]\n"
+			"    -w, --write              write frames to png (offscreen only)\n"
 			"    -x, --surfaceless        use surfaceless mode, instead of gbm surface\n"
 			"    -N, --nonblocking        do not poll for input\n"
 			,
@@ -114,9 +116,10 @@ int main(int argc, char *argv[])
 	int opt;
 	unsigned int len;
 	unsigned int vrefresh = 0;
-	unsigned int count = ~0;
+	unsigned int count = ~0u;
 	bool surfaceless = false;
 	bool nonblocking = false;
+	bool write = false;
 
 #ifdef HAVE_GST
 	gst_init(&argc, &argv);
@@ -206,6 +209,9 @@ int main(int argc, char *argv[])
 			strncpy(mode_str, optarg, len);
 			mode_str[len] = '\0';
 			break;
+		case 'w':
+			write = true;
+			break;
 		case 'x':
 			surfaceless = true;
 			break;
@@ -220,8 +226,17 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	if (write && !offscreen) {
+		printf("Only `--offscreen` supports write to png.\n");
+		return -1;
+	}
+	if (write && count == ~0u) {
+		printf("Please specify `--count=N` with a count to use write to png.\n");
+		return -1;
+	}
+
 	if (offscreen)
-		drm = init_drm_offscreen(device, mode_str, count);
+		drm = init_drm_offscreen(device, mode_str, count, write);
 	else if (atomic)
 		drm = init_drm_atomic(device, mode_str, connector_id, vrefresh, count, nonblocking);
 	else

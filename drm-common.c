@@ -394,7 +394,7 @@ int init_drm(struct drm *drm, const char *device, const char *mode_str,
 	return 0;
 }
 
-int init_drm_render(struct drm *drm, const char *device, const char *mode_str, unsigned int count)
+int init_drm_render(struct drm *drm, const char *device, const char *mode_str, unsigned int count, bool write)
 {
 	int width, height;
 	drmModeModeInfo *mode;
@@ -426,6 +426,17 @@ int init_drm_render(struct drm *drm, const char *device, const char *mode_str, u
 		close(drm->fd);
 		drm->fd = -1;
 		return -1;
+	}
+
+	if (write) {
+		/* used only for write to png option */
+		drm->pixels = malloc(width * height * 4);
+		if (!drm->pixels) {
+			free(mode);
+			close(drm->fd);
+			drm->fd = -1;
+			return -1;
+		}
 	}
 
 	mode->hdisplay = width;
