@@ -114,6 +114,17 @@ struct drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
 	}
 
 	if (ret) {
+		uint32_t handle = gbm_bo_get_handle(bo).u32;
+		uint32_t bpp = gbm_bo_get_bpp(bo);
+		uint8_t depth = bpp;
+		uint32_t pitch = gbm_bo_get_stride(bo);
+
+		ret = drmModeAddFB(drm_fd, width, height, depth, bpp, pitch,
+				handle, &fb->fb_id);
+
+	}
+
+	if (ret) {
 		printf("failed to create fb: %s\n", strerror(errno));
 		free(fb);
 		return NULL;
