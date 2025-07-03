@@ -29,8 +29,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "common.h"
+
+#define NSEC_PER_SEC (INT64_C(1000) * USEC_PER_SEC)
+#define USEC_PER_SEC (INT64_C(1000) * MSEC_PER_SEC)
+#define MSEC_PER_SEC INT64_C(1000)
 
 static int64_t start_time, report_time, cur_time;
 static unsigned int frames;
@@ -481,6 +486,13 @@ static void dump_perfcntrs(unsigned nframes)
 		}
 	}
 	printf("\n");
+}
+
+static int64_t get_time_ns(void)
+{
+	struct timespec tv;
+	clock_gettime(CLOCK_MONOTONIC, &tv);
+	return tv.tv_nsec + tv.tv_sec * NSEC_PER_SEC;
 }
 
 void start_fpscntrs(void)

@@ -217,12 +217,6 @@ void start_fpscntrs(void);
 void end_fpscntrs(void);
 void finish_fpscntrs(void);
 
-#define NSEC_PER_SEC (INT64_C(1000) * USEC_PER_SEC)
-#define USEC_PER_SEC (INT64_C(1000) * MSEC_PER_SEC)
-#define MSEC_PER_SEC INT64_C(1000)
-
-int64_t get_time_ns(void);
-
 int buf_to_fd(const struct gbm *gbm,
               uint32_t width, uint32_t height, uint32_t bpp, const void *ptr,
               uint32_t *pstride, uint64_t *modifier);
