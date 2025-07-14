@@ -44,108 +44,8 @@ static struct {
 	GLint modelviewmatrix, modelviewprojectionmatrix;
 	GLint texture, textureuv;
 	GLuint vbo;
-	GLuint positionsoffset, texcoordsoffset, normalsoffset;
 	GLuint tex[2];
 } gl;
-
-static const GLfloat vVertices[] = {
-		// front
-		-1.0f, -1.0f, +1.0f,
-		+1.0f, -1.0f, +1.0f,
-		-1.0f, +1.0f, +1.0f,
-		+1.0f, +1.0f, +1.0f,
-		// back
-		+1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		+1.0f, +1.0f, -1.0f,
-		-1.0f, +1.0f, -1.0f,
-		// right
-		+1.0f, -1.0f, +1.0f,
-		+1.0f, -1.0f, -1.0f,
-		+1.0f, +1.0f, +1.0f,
-		+1.0f, +1.0f, -1.0f,
-		// left
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, +1.0f,
-		-1.0f, +1.0f, -1.0f,
-		-1.0f, +1.0f, +1.0f,
-		// top
-		-1.0f, +1.0f, +1.0f,
-		+1.0f, +1.0f, +1.0f,
-		-1.0f, +1.0f, -1.0f,
-		+1.0f, +1.0f, -1.0f,
-		// bottom
-		-1.0f, -1.0f, -1.0f,
-		+1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, +1.0f,
-		+1.0f, -1.0f, +1.0f,
-};
-
-GLfloat vTexCoords[] = {
-		//front
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f,
-		//back
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f,
-		//right
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f,
-		//left
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f,
-		//top
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f,
-		//bottom
-		1.0f, 0.0f,
-		0.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-};
-
-static const GLfloat vNormals[] = {
-		// front
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		// back
-		+0.0f, +0.0f, -1.0f, // backward
-		+0.0f, +0.0f, -1.0f, // backward
-		+0.0f, +0.0f, -1.0f, // backward
-		+0.0f, +0.0f, -1.0f, // backward
-		// right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		// left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		// top
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		// bottom
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f  // down
-};
 
 static const char *vertex_shader_source =
 		"uniform mat4 modelviewMatrix;      \n"
@@ -489,21 +389,14 @@ const struct cube * init_cube_tex(const struct egl *egl, const struct gbm *gbm, 
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);
 
-	gl.positionsoffset = 0;
-	gl.texcoordsoffset = sizeof(vVertices);
-	gl.normalsoffset = sizeof(vVertices) + sizeof(vTexCoords);
-
 	glGenBuffers(1, &gl.vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vVertices) + sizeof(vTexCoords) + sizeof(vNormals), 0, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.texcoordsoffset, sizeof(vTexCoords), &vTexCoords[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
-	glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, position));
 	glEnableVertexAttribArray(position_attrib);
-	glVertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glVertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, normal));
 	glEnableVertexAttribArray(normal_attrib);
-	glVertexAttribPointer(texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glVertexAttribPointer(texcoord_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, texCoord));
 	glEnableVertexAttribArray(texcoord_attrib);
 
 	ret = init_tex(mode);

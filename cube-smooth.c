@@ -35,107 +35,7 @@ static struct {
 	GLuint program;
 	GLint modelviewmatrix, modelviewprojectionmatrix;
 	GLuint vbo;
-	GLuint positionsoffset, colorsoffset, normalsoffset;
 } gl;
-
-static const GLfloat vVertices[] = {
-		// front
-		-1.0f, -1.0f, +1.0f,
-		+1.0f, -1.0f, +1.0f,
-		-1.0f, +1.0f, +1.0f,
-		+1.0f, +1.0f, +1.0f,
-		// back
-		+1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		+1.0f, +1.0f, -1.0f,
-		-1.0f, +1.0f, -1.0f,
-		// right
-		+1.0f, -1.0f, +1.0f,
-		+1.0f, -1.0f, -1.0f,
-		+1.0f, +1.0f, +1.0f,
-		+1.0f, +1.0f, -1.0f,
-		// left
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, +1.0f,
-		-1.0f, +1.0f, -1.0f,
-		-1.0f, +1.0f, +1.0f,
-		// top
-		-1.0f, +1.0f, +1.0f,
-		+1.0f, +1.0f, +1.0f,
-		-1.0f, +1.0f, -1.0f,
-		+1.0f, +1.0f, -1.0f,
-		// bottom
-		-1.0f, -1.0f, -1.0f,
-		+1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f, +1.0f,
-		+1.0f, -1.0f, +1.0f,
-};
-
-static const GLfloat vColors[] = {
-		// front
-		0.0f,  0.0f,  1.0f, // blue
-		1.0f,  0.0f,  1.0f, // magenta
-		0.0f,  1.0f,  1.0f, // cyan
-		1.0f,  1.0f,  1.0f, // white
-		// back
-		1.0f,  0.0f,  0.0f, // red
-		0.0f,  0.0f,  0.0f, // black
-		1.0f,  1.0f,  0.0f, // yellow
-		0.0f,  1.0f,  0.0f, // green
-		// right
-		1.0f,  0.0f,  1.0f, // magenta
-		1.0f,  0.0f,  0.0f, // red
-		1.0f,  1.0f,  1.0f, // white
-		1.0f,  1.0f,  0.0f, // yellow
-		// left
-		0.0f,  0.0f,  0.0f, // black
-		0.0f,  0.0f,  1.0f, // blue
-		0.0f,  1.0f,  0.0f, // green
-		0.0f,  1.0f,  1.0f, // cyan
-		// top
-		0.0f,  1.0f,  1.0f, // cyan
-		1.0f,  1.0f,  1.0f, // white
-		0.0f,  1.0f,  0.0f, // green
-		1.0f,  1.0f,  0.0f, // yellow
-		// bottom
-		0.0f,  0.0f,  0.0f, // black
-		1.0f,  0.0f,  0.0f, // red
-		0.0f,  0.0f,  1.0f, // blue
-		1.0f,  0.0f,  1.0f  // magenta
-};
-
-static const GLfloat vNormals[] = {
-		// front
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		// back
-		+0.0f, +0.0f, -1.0f, // backward
-		+0.0f, +0.0f, -1.0f, // backward
-		+0.0f, +0.0f, -1.0f, // backward
-		+0.0f, +0.0f, -1.0f, // backward
-		// right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		// left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		// top
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		// bottom
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f  // down
-};
 
 static const char *vertex_shader_source =
 		"uniform mat4 modelviewMatrix;      \n"
@@ -225,20 +125,14 @@ const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gb
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);
 
-	gl.positionsoffset = 0;
-	gl.colorsoffset = sizeof(vVertices);
-	gl.normalsoffset = sizeof(vVertices) + sizeof(vColors);
 	glGenBuffers(1, &gl.vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vVertices) + sizeof(vColors) + sizeof(vNormals), 0, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.colorsoffset, sizeof(vColors), &vColors[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
-	glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, position));
 	glEnableVertexAttribArray(position_attrib);
-	glVertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glVertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, normal));
 	glEnableVertexAttribArray(normal_attrib);
-	glVertexAttribPointer(color_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.colorsoffset);
+	glVertexAttribPointer(color_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, color));
 	glEnableVertexAttribArray(color_attrib);
 
 	glClearColor(0.5, 0.5, 0.5, 1.0);

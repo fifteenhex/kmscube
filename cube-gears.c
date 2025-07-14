@@ -62,7 +62,6 @@ static struct {
 	GLint position_attrib, normal_attrib, texcoord_attrib;
 	GLint texture;
 	GLuint vbo;
-	GLuint positionsoffset, texcoordsoffset, normalsoffset;
 } gl;
 
 /**
@@ -278,105 +277,6 @@ create_gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width,
 
 	return gear;
 }
-
-static const GLfloat vVertices[] = {
-	// front
-	-1.0f, -1.0f, +1.0f,
-	+1.0f, -1.0f, +1.0f,
-	-1.0f, +1.0f, +1.0f,
-	+1.0f, +1.0f, +1.0f,
-	// back
-	+1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f, -1.0f,
-	+1.0f, +1.0f, -1.0f,
-	-1.0f, +1.0f, -1.0f,
-	// right
-	+1.0f, -1.0f, +1.0f,
-	+1.0f, -1.0f, -1.0f,
-	+1.0f, +1.0f, +1.0f,
-	+1.0f, +1.0f, -1.0f,
-	// left
-	-1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f, +1.0f,
-	-1.0f, +1.0f, -1.0f,
-	-1.0f, +1.0f, +1.0f,
-	// top
-	-1.0f, +1.0f, +1.0f,
-	+1.0f, +1.0f, +1.0f,
-	-1.0f, +1.0f, -1.0f,
-	+1.0f, +1.0f, -1.0f,
-	// bottom
-	-1.0f, -1.0f, -1.0f,
-	+1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f, +1.0f,
-	+1.0f, -1.0f, +1.0f,
-};
-
-static const GLfloat vTexCoords[] = {
-	//front
-	1.0f, 1.0f,
-	0.0f, 1.0f,
-	1.0f, 0.0f,
-	0.0f, 0.0f,
-	//back
-	1.0f, 1.0f,
-	0.0f, 1.0f,
-	1.0f, 0.0f,
-	0.0f, 0.0f,
-	//right
-	1.0f, 1.0f,
-	0.0f, 1.0f,
-	1.0f, 0.0f,
-	0.0f, 0.0f,
-	//left
-	1.0f, 1.0f,
-	0.0f, 1.0f,
-	1.0f, 0.0f,
-	0.0f, 0.0f,
-	//top
-	1.0f, 1.0f,
-	0.0f, 1.0f,
-	1.0f, 0.0f,
-	0.0f, 0.0f,
-	//bottom
-	1.0f, 0.0f,
-	0.0f, 0.0f,
-	1.0f, 1.0f,
-	0.0f, 1.0f,
-};
-
-static const GLfloat vNormals[] = {
-	// front
-	+0.0f, +0.0f, +1.0f, // forward
-	+0.0f, +0.0f, +1.0f, // forward
-	+0.0f, +0.0f, +1.0f, // forward
-	+0.0f, +0.0f, +1.0f, // forward
-	// back
-	+0.0f, +0.0f, -1.0f, // backward
-	+0.0f, +0.0f, -1.0f, // backward
-	+0.0f, +0.0f, -1.0f, // backward
-	+0.0f, +0.0f, -1.0f, // backward
-	// right
-	+1.0f, +0.0f, +0.0f, // right
-	+1.0f, +0.0f, +0.0f, // right
-	+1.0f, +0.0f, +0.0f, // right
-	+1.0f, +0.0f, +0.0f, // right
-	// left
-	-1.0f, +0.0f, +0.0f, // left
-	-1.0f, +0.0f, +0.0f, // left
-	-1.0f, +0.0f, +0.0f, // left
-	-1.0f, +0.0f, +0.0f, // left
-	// top
-	+0.0f, +1.0f, +0.0f, // up
-	+0.0f, +1.0f, +0.0f, // up
-	+0.0f, +1.0f, +0.0f, // up
-	+0.0f, +1.0f, +0.0f, // up
-	// bottom
-	+0.0f, -1.0f, +0.0f, // down
-	+0.0f, -1.0f, +0.0f, // down
-	+0.0f, -1.0f, +0.0f, // down
-	+0.0f, -1.0f, +0.0f  // down
-};
 
 static const char gears_vertex_shader[] =
 "attribute vec3 position;                                                            \n"
@@ -639,9 +539,9 @@ draw_gears(unsigned i)
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
 
 	/* Set up the position of the attributes in the buffer */
-	glVertexAttribPointer(gl.position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glVertexAttribPointer(gl.normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glVertexAttribPointer(gl.texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glVertexAttribPointer(gl.position_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, position));
+	glVertexAttribPointer(gl.normal_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, normal));
+	glVertexAttribPointer(gl.texcoord_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const GLvoid *)offsetof(struct vertex, texCoord));
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
@@ -683,16 +583,9 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);
 
-	gl.positionsoffset = 0;
-	gl.texcoordsoffset = sizeof(vVertices);
-	gl.normalsoffset = sizeof(vVertices) + sizeof(vTexCoords);
-
 	glGenBuffers(1, &gl.vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vVertices) + sizeof(vTexCoords) + sizeof(vNormals), 0, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.texcoordsoffset, sizeof(vTexCoords), &vTexCoords[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
 
 	ret = create_program(gears_vertex_shader, gears_fragment_shader, &gl.program_gears);
 	if (ret < 0)

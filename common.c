@@ -33,6 +33,69 @@
 
 #include "common.h"
 
+#define POS_LBF {-1.0f, -1.0f, +1.0f}
+#define POS_RBF {+1.0f, -1.0f, +1.0f}
+#define POS_LTF {-1.0f, +1.0f, +1.0f}
+#define POS_RTF {+1.0f, +1.0f, +1.0f}
+#define POS_LBB {-1.0f, -1.0f, -1.0f}
+#define POS_RBB {+1.0f, -1.0f, -1.0f}
+#define POS_LTB {-1.0f, +1.0f, -1.0f}
+#define POS_RTB {+1.0f, +1.0f, -1.0f}
+
+#define COLOR_BLACK   {0.0f, 0.0f, 0.0f}
+#define COLOR_BLUE    {0.0f, 0.0f, 1.0f}
+#define COLOR_CYAN    {0.0f, 1.0f, 1.0f}
+#define COLOR_GREEN   {0.0f, 1.0f, 0.0f}
+#define COLOR_WHITE   {1.0f, 1.0f, 1.0f}
+#define COLOR_YELLOW  {1.0f, 1.0f, 0.0f}
+#define COLOR_MAGENTA {1.0f, 0.0f, 1.0f}
+#define COLOR_RED     {1.0f, 0.0f, 0.0f}
+
+#define NORMAL_FORWARD  {+0.0f, +0.0f, +1.0f}
+#define NORMAL_BACKWARD {+0.0f, +0.0f, -1.0f}
+#define NORMAL_RIGHT    {+1.0f, +0.0f, +0.0f}
+#define NORMAL_LEFT     {-1.0f, +0.0f, +0.0f}
+#define NORMAL_UP       {+0.0f, +1.0f, +0.0f}
+#define NORMAL_DOWN     {+0.0f, -1.0f, +0.0f}
+
+#define TEX_LT {0.0f, 1.0f}
+#define TEX_RT {1.0f, 1.0f}
+#define TEX_LB {0.0f, 0.0f}
+#define TEX_RB {1.0f, 0.0f}
+
+const struct vertex vertices[6 * 4] = {
+        // front
+        { POS_LBF, COLOR_BLUE,    NORMAL_FORWARD, TEX_LT },
+        { POS_RBF, COLOR_MAGENTA, NORMAL_FORWARD, TEX_RT },
+        { POS_LTF, COLOR_CYAN,    NORMAL_FORWARD, TEX_LB },
+        { POS_RTF, COLOR_WHITE,   NORMAL_FORWARD, TEX_RB },
+        // back
+        { POS_RBB, COLOR_RED,     NORMAL_BACKWARD, TEX_LT },
+        { POS_LBB, COLOR_BLACK,   NORMAL_BACKWARD, TEX_RT },
+        { POS_RTB, COLOR_YELLOW,  NORMAL_BACKWARD, TEX_LB },
+        { POS_LTB, COLOR_GREEN,   NORMAL_BACKWARD, TEX_RB },
+        // right
+        { POS_RBF, COLOR_MAGENTA, NORMAL_RIGHT, TEX_LT },
+        { POS_RBB, COLOR_RED,     NORMAL_RIGHT, TEX_RT },
+        { POS_RTF, COLOR_WHITE,   NORMAL_RIGHT, TEX_LB },
+        { POS_RTB, COLOR_YELLOW,  NORMAL_RIGHT, TEX_RB },
+        // left
+        { POS_LBB, COLOR_BLACK,   NORMAL_LEFT, TEX_LT },
+        { POS_LBF, COLOR_BLUE,    NORMAL_LEFT, TEX_RT },
+        { POS_LTB, COLOR_GREEN,   NORMAL_LEFT, TEX_LB },
+        { POS_LTF, COLOR_CYAN,    NORMAL_LEFT, TEX_RB },
+        // top
+        { POS_LTF, COLOR_CYAN,    NORMAL_UP, TEX_LT },
+        { POS_RTF, COLOR_WHITE,   NORMAL_UP, TEX_RT },
+        { POS_LTB, COLOR_GREEN,   NORMAL_UP, TEX_LB },
+        { POS_RTB, COLOR_YELLOW,  NORMAL_UP, TEX_RB },
+        // bottom
+        { POS_LBB, COLOR_BLACK,   NORMAL_DOWN, TEX_LT },
+        { POS_RBB, COLOR_RED,     NORMAL_DOWN, TEX_RT },
+        { POS_LBF, COLOR_BLUE,    NORMAL_DOWN, TEX_LB },
+        { POS_RBF, COLOR_MAGENTA, NORMAL_DOWN, TEX_RB },
+};
+
 static struct gbm gbm;
 static struct egl _egl;
 static struct egl *egl = &_egl;

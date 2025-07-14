@@ -34,6 +34,14 @@
 #include <gbm.h>
 #include <drm_fourcc.h>
 #include <stdbool.h>
+#include <stddef.h>
+
+extern const struct vertex {
+        GLfloat position[3]; // x, y, z
+        GLfloat color[3]; // r, g, b
+        GLfloat normal[3]; // x, y, z
+        GLfloat texCoord[2]; // s, t
+} vertices[6 * 4]; // 6 faces with 4 corners vertices each
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
