@@ -608,7 +608,6 @@ draw_gears(unsigned i)
 
 	glViewport(0, 0, texw, texh);
 
-	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -617,6 +616,8 @@ draw_gears(unsigned i)
 	draw_gear(gear1, &transform, -3.0, -2.0, angle, red);
 	draw_gear(gear2, &transform, 3.1, -2.0, -2 * angle - 9.0, green);
 	draw_gear(gear3, &transform, -3.1, 4.2, -2 * angle - 25.0, blue);
+
+	glDisable(GL_DEPTH_TEST);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
 
@@ -662,9 +663,6 @@ draw_gears(unsigned i)
 	glDisableVertexAttribArray(gl.in_position);
 	glDisableVertexAttribArray(gl.in_normal);
 	glDisableVertexAttribArray(gl.in_texcoord);
-
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
 
 	gears_framebuffer_destroy();
 }
