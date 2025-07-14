@@ -463,14 +463,6 @@ static const char *cube_fragment_shader =
 
 static const uint32_t texw = 512, texh = 512;
 
-static void
-gears_framebuffer_destroy()
-{
-	glDeleteTextures(1, &gl.gears_fb.cb_tex);
-	glDeleteRenderbuffers(1, &gl.gears_fb.db);
-	glDeleteFramebuffers(1, &gl.gears_fb.fb);
-}
-
 static bool
 gears_framebuffer_create()
 {
@@ -494,7 +486,9 @@ gears_framebuffer_create()
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("failed framebuffer check for created target buffer\n");
-		gears_framebuffer_destroy();
+		glDeleteRenderbuffers(1, &gl.gears_fb.db);
+		glDeleteFramebuffers(1, &gl.gears_fb.fb);
+		glDeleteTextures(1, &gl.gears_fb.cb_tex);
 		return false;
 	}
 
@@ -595,7 +589,7 @@ draw_gears(unsigned i)
 	/* Translate the view */
 	esTranslate(&transform, 0, 0, -40);
 
-	assert(gears_framebuffer_create());
+	glBindFramebuffer(GL_FRAMEBUFFER, gl.gears_fb.fb);
 
 	glViewport(0, 0, texw, texh);
 
@@ -660,8 +654,6 @@ draw_gears(unsigned i)
 	glDisableVertexAttribArray(gl.in_position);
 	glDisableVertexAttribArray(gl.in_normal);
 	glDisableVertexAttribArray(gl.in_texcoord);
-
-	gears_framebuffer_destroy();
 }
 
 const struct cube *
@@ -740,6 +732,11 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	gear3 = create_gear(1.3, 2.0, 0.5, 10, 0.7);
 
 	esFrustum(&gears_projection_matrix, -1.0, 1.0, -1.0, 1.0, 5.0, 60.0);
+
+	int current_fb;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fb);
+	assert(gears_framebuffer_create());
+	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
 
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 
