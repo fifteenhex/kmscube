@@ -256,7 +256,7 @@ static int init_shadertoy(const char *file)
 	int ret = load_shader(file);
 	gl.stoy_program = ret;
 
-	glBindAttribLocation(gl.program, 0, "position");
+	glBindAttribLocation(gl.stoy_program, 0, "position");
 
 	ret = link_program(gl.stoy_program);
 
