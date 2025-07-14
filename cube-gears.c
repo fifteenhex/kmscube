@@ -668,14 +668,8 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	esMatrixLoadIdentity(&gl.projection);
 	esFrustum(&gl.projection, -2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
 
-	ret = create_program(cube_vertex_shader, cube_fragment_shader);
+	ret = create_program(cube_vertex_shader, cube_fragment_shader, &gl.program_face);
 	if (ret < 0)
-		return NULL;
-
-	gl.program_face = ret;
-
-	ret = link_program(gl.program_face);
-	if (ret)
 		return NULL;
 
 	/* Get uniforms and attributes */
@@ -700,13 +694,8 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	glBufferSubData(GL_ARRAY_BUFFER, gl.texcoordsoffset, sizeof(vTexCoords), &vTexCoords[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
 
-	ret = create_program(gears_vertex_shader, gears_fragment_shader);
+	ret = create_program(gears_vertex_shader, gears_fragment_shader, &gl.program_gears);
 	if (ret < 0)
-		return NULL;
-	gl.program_gears = ret;
-
-	ret = link_program(gl.program_gears);
-	if (ret)
 		return NULL;
 
 	/* Get the locations of the uniforms and attributes so we can access them */

@@ -443,7 +443,7 @@ struct egl * init_egl(const struct gbm *gbm, int samples)
 	return egl;
 }
 
-int create_program(const char *vs_src, const char *fs_src)
+int create_program(const char *vs_src, const char *fs_src, GLuint *out_program)
 {
 	GLuint vertex_shader, fragment_shader, program;
 	GLint ret;
@@ -503,13 +503,6 @@ int create_program(const char *vs_src, const char *fs_src)
 	glAttachShader(program, vertex_shader);
 	glAttachShader(program, fragment_shader);
 
-	return program;
-}
-
-int link_program(unsigned program)
-{
-	GLint ret;
-
 	glLinkProgram(program);
 
 	glGetProgramiv(program, GL_LINK_STATUS, &ret);
@@ -529,6 +522,7 @@ int link_program(unsigned program)
 		return -1;
 	}
 
+	*out_program = program;
 	return 0;
 }
 

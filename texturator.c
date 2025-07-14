@@ -497,13 +497,11 @@ static unsigned tex;
 
 static void setup_gl(void)
 {
-	int prog, ret;
+	GLuint prog;
+	int ret;
 
-	prog = create_program(vertex_shader_source, get_fs());
-	assert(prog >= 0);
-
-	ret = link_program(prog);
-	assert(ret == 0);
+	ret = create_program(vertex_shader_source, get_fs(), &prog);
+	assert(ret >= 0);
 
 	IN_POSITION = glGetAttribLocation(prog, "in_position");
 	IN_TEXCOORD = glGetAttribLocation(prog, "in_texcoord");

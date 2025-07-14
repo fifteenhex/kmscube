@@ -468,14 +468,8 @@ const struct cube * init_cube_tex(const struct egl *egl, const struct gbm *gbm, 
 	gl.mode = mode;
 	gl.gbm = gbm;
 
-	ret = create_program(vertex_shader_source, fragment_shader_source);
+	ret = create_program(vertex_shader_source, fragment_shader_source, &gl.program);
 	if (ret < 0)
-		return NULL;
-
-	gl.program = ret;
-
-	ret = link_program(gl.program);
-	if (ret)
 		return NULL;
 
 	glUseProgram(gl.program);

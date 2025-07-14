@@ -226,7 +226,7 @@ static const char *shadertoy_fs_tmpl =
 
 static const uint32_t texw = 512, texh = 512;
 
-static int load_shader(const char *file)
+static int load_shader(const char *file, GLuint *program)
 {
 	struct stat statbuf;
 	char *frag;
@@ -248,15 +248,14 @@ static int load_shader(const char *file)
 
 	asprintf(&frag, shadertoy_fs_tmpl, text);
 
-	return create_program(shadertoy_vs, frag);
+	return create_program(shadertoy_vs, frag, program);
 }
 
 static int init_shadertoy(const char *file)
 {
-	int ret = load_shader(file);
-	gl.stoy_program = ret;
-
-	ret = link_program(gl.stoy_program);
+	int ret = load_shader(file, &gl.stoy_program);
+	if (ret < 0)
+		return ret;
 
 	glUseProgram(gl.stoy_program);
 	gl.stoy_time_loc = glGetUniformLocation(gl.stoy_program, "iTime");
@@ -390,14 +389,8 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 	esMatrixLoadIdentity(&gl.projection);
 	esFrustum(&gl.projection, -2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
 
-	ret = create_program(cube_vs, cube_fs);
+	ret = create_program(cube_vs, cube_fs, &gl.program);
 	if (ret < 0)
-		return NULL;
-
-	gl.program = ret;
-
-	ret = link_program(gl.program);
-	if (ret)
 		return NULL;
 
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");

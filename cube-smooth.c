@@ -210,14 +210,8 @@ const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gb
 	esMatrixLoadIdentity(&gl.projection);
 	esFrustum(&gl.projection, -2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
 
-	ret = create_program(vertex_shader_source, fragment_shader_source);
+	ret = create_program(vertex_shader_source, fragment_shader_source, &gl.program);
 	if (ret < 0)
-		return NULL;
-
-	gl.program = ret;
-
-	ret = link_program(gl.program);
-	if (ret)
 		return NULL;
 
 	glUseProgram(gl.program);

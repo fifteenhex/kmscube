@@ -353,14 +353,8 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	esFrustum(&gl.projection, -2.1f, +2.1f, -2.1f * aspect, +2.1f * aspect, 6.0f, 10.0f);
 	gl.gbm = gbm;
 
-	ret = create_program(blit_vs, blit_fs);
+	ret = create_program(blit_vs, blit_fs, &gl.blit_program);
 	if (ret < 0)
-		return NULL;
-
-	gl.blit_program = ret;
-
-	ret = link_program(gl.blit_program);
-	if (ret)
 		return NULL;
 
 	gl.blit_texture = glGetUniformLocation(gl.blit_program, "uTex");
@@ -371,14 +365,8 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	glBindBuffer(GL_ARRAY_BUFFER, gl.blit_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(blit_vertices), &blit_vertices[0], GL_STATIC_DRAW);
 
-	ret = create_program(vertex_shader_source, fragment_shader_source);
+	ret = create_program(vertex_shader_source, fragment_shader_source, &gl.program);
 	if (ret < 0)
-		return NULL;
-
-	gl.program = ret;
-
-	ret = link_program(gl.program);
-	if (ret)
 		return NULL;
 
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");
