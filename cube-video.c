@@ -44,6 +44,8 @@ static struct {
 	GLint modelviewmatrix, modelviewprojectionmatrix;
 	GLint texture, blit_texture;
 	GLuint vbo, blit_vbo;
+	GLint position_attrib, texcoord_attrib, normal_attrib;
+	GLint blit_position_attrib, blit_texcoord_attrib;
 	GLuint positionsoffset, texcoordsoffset, normalsoffset;
 	GLuint tex;
 
@@ -270,15 +272,15 @@ static void draw_cube_video(unsigned i)
 	glUseProgram(gl.blit_program);
 	glUniform1i(gl.blit_texture, 0); /* '0' refers to texture unit 0. */
 	glBindBuffer(GL_ARRAY_BUFFER, gl.blit_vbo);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(blit_vertices[0]), (const GLvoid *)offsetof(struct blit_vertex, position));
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(blit_vertices[0]), (const GLvoid *)offsetof(struct blit_vertex, texCoord));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(gl.blit_position_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(blit_vertices[0]), (const GLvoid *)offsetof(struct blit_vertex, position));
+	glVertexAttribPointer(gl.blit_texcoord_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(blit_vertices[0]), (const GLvoid *)offsetof(struct blit_vertex, texCoord));
+	glEnableVertexAttribArray(gl.blit_position_attrib);
+	glEnableVertexAttribArray(gl.blit_texcoord_attrib);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(gl.blit_texcoord_attrib);
+	glEnableVertexAttribArray(gl.blit_position_attrib);
 
 	glUseProgram(gl.program);
 
@@ -296,12 +298,12 @@ static void draw_cube_video(unsigned i)
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(gl.position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glVertexAttribPointer(gl.texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glVertexAttribPointer(gl.normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glEnableVertexAttribArray(gl.position_attrib);
+	glEnableVertexAttribArray(gl.texcoord_attrib);
+	glEnableVertexAttribArray(gl.normal_attrib);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
@@ -310,9 +312,9 @@ static void draw_cube_video(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(gl.normal_attrib);
+	glEnableVertexAttribArray(gl.texcoord_attrib);
+	glEnableVertexAttribArray(gl.position_attrib);
 
 	gl.last_fence = gl.egl->eglCreateSyncKHR(gl.egl->display, EGL_SYNC_FENCE_KHR, NULL);
 }
@@ -357,14 +359,13 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 
 	gl.blit_program = ret;
 
-	glBindAttribLocation(gl.blit_program, 0, "in_position");
-	glBindAttribLocation(gl.blit_program, 1, "in_TexCoord");
-
 	ret = link_program(gl.blit_program);
 	if (ret)
 		return NULL;
 
 	gl.blit_texture = glGetUniformLocation(gl.blit_program, "uTex");
+	gl.blit_position_attrib = glGetAttribLocation(gl.blit_program, "in_position");
+	gl.blit_texcoord_attrib = glGetAttribLocation(gl.blit_program, "in_TexCoord");
 
 	glGenBuffers(1, &gl.blit_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, gl.blit_vbo);
@@ -376,10 +377,6 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 
 	gl.program = ret;
 
-	glBindAttribLocation(gl.program, 0, "in_position");
-	glBindAttribLocation(gl.program, 1, "in_TexCoord");
-	glBindAttribLocation(gl.program, 2, "in_normal");
-
 	ret = link_program(gl.program);
 	if (ret)
 		return NULL;
@@ -387,6 +384,9 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program, "modelviewprojectionMatrix");
 	gl.texture   = glGetUniformLocation(gl.program, "uTex");
+	gl.position_attrib = glGetAttribLocation(gl.program, "in_position");
+	gl.texcoord_attrib = glGetAttribLocation(gl.program, "in_TexCoord");
+	gl.normal_attrib = glGetAttribLocation(gl.program, "in_normal");
 
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);

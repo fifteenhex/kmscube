@@ -59,7 +59,7 @@ static struct {
 	GLuint program_face, program_gears;
 
 	GLint modelviewmatrix, modelviewprojectionmatrix;
-	GLint in_position, in_normal, in_texcoord;
+	GLint position_attrib, normal_attrib, texcoord_attrib;
 	GLint texture;
 	GLuint vbo;
 	GLuint positionsoffset, texcoordsoffset, normalsoffset;
@@ -615,9 +615,9 @@ draw_gears(unsigned i)
 
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
 
-	glEnableVertexAttribArray(gl.in_position);
-	glEnableVertexAttribArray(gl.in_normal);
-	glEnableVertexAttribArray(gl.in_texcoord);
+	glEnableVertexAttribArray(gl.position_attrib);
+	glEnableVertexAttribArray(gl.normal_attrib);
+	glEnableVertexAttribArray(gl.texcoord_attrib);
 
 	ESMatrix modelview;
 
@@ -639,9 +639,9 @@ draw_gears(unsigned i)
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
 
 	/* Set up the position of the attributes in the buffer */
-	glVertexAttribPointer(gl.in_position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glVertexAttribPointer(gl.in_normal, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glVertexAttribPointer(gl.in_texcoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glVertexAttribPointer(gl.position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glVertexAttribPointer(gl.normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glVertexAttribPointer(gl.texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
@@ -652,9 +652,9 @@ draw_gears(unsigned i)
 	glUseProgram(0);
 
 	/* Disable the attributes */
-	glDisableVertexAttribArray(gl.in_position);
-	glDisableVertexAttribArray(gl.in_normal);
-	glDisableVertexAttribArray(gl.in_texcoord);
+	glDisableVertexAttribArray(gl.position_attrib);
+	glDisableVertexAttribArray(gl.normal_attrib);
+	glDisableVertexAttribArray(gl.texcoord_attrib);
 }
 
 const struct cube *
@@ -674,22 +674,17 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 
 	gl.program_face = ret;
 
-	gl.in_position = 0;
-	gl.in_normal = 1;
-	gl.in_texcoord = 2;
-
-	glBindAttribLocation(gl.program_face, gl.in_position, "in_position");
-	glBindAttribLocation(gl.program_face, gl.in_normal, "in_normal");
-	glBindAttribLocation(gl.program_face, gl.in_texcoord, "in_texcoord");
-
 	ret = link_program(gl.program_face);
 	if (ret)
 		return NULL;
 
+	/* Get uniforms and attributes */
 	gl.modelviewmatrix = glGetUniformLocation(gl.program_face, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program_face, "modelviewprojectionMatrix");
-
 	gl.texture   = glGetUniformLocation(gl.program_face, "uTex");
+	gl.position_attrib = glGetAttribLocation(gl.program_face, "in_position");
+	gl.normal_attrib = glGetAttribLocation(gl.program_face, "in_normal");
+	gl.texcoord_attrib = glGetAttribLocation(gl.program_face, "in_texcoord");
 
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);
@@ -710,20 +705,16 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 		return NULL;
 	gl.program_gears = ret;
 
-	position_location = 3;
-	normals_location = 4;
-
-	glBindAttribLocation(gl.program_gears, position_location, "position");
-	glBindAttribLocation(gl.program_gears, normals_location, "normal");
-
 	ret = link_program(gl.program_gears);
 	if (ret)
 		return NULL;
 
-	/* Get the locations of the uniforms so we can access them */
+	/* Get the locations of the uniforms and attributes so we can access them */
 	modelview_projection_matrix_location = glGetUniformLocation(gl.program_gears, "ModelViewProjectionMatrix");
 	normal_matrix_location = glGetUniformLocation(gl.program_gears, "NormalMatrix");
 	material_color_location = glGetUniformLocation(gl.program_gears, "MaterialColor");
+	position_location = glGetAttribLocation(gl.program_gears, "position");
+	normals_location = glGetAttribLocation(gl.program_gears, "normal");
 
 	/* create the gears */
 	gear1 = create_gear(1.0, 4.0, 1.0, 20, 0.7);

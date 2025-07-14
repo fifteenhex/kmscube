@@ -404,8 +404,8 @@ static const char *get_sampler(void)
 	return buf;
 }
 
-#define IN_POSITION 0
-#define IN_TEXCOORD 1
+static GLuint IN_POSITION;
+static GLuint IN_TEXCOORD;
 const char *vertex_shader_source =
 	"#version 300 es                           \n"
 	"in vec4 in_position;                      \n"
@@ -502,11 +502,11 @@ static void setup_gl(void)
 	prog = create_program(vertex_shader_source, get_fs());
 	assert(prog >= 0);
 
-	glBindAttribLocation(prog, IN_POSITION, "in_position");
-	glBindAttribLocation(prog, IN_TEXCOORD, "in_texcoord");
-
 	ret = link_program(prog);
 	assert(ret == 0);
+
+	IN_POSITION = glGetAttribLocation(prog, "in_position");
+	IN_TEXCOORD = glGetAttribLocation(prog, "in_texcoord");
 
 	glUseProgram(prog);
 

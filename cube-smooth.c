@@ -216,10 +216,6 @@ const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gb
 
 	gl.program = ret;
 
-	glBindAttribLocation(gl.program, 0, "in_position");
-	glBindAttribLocation(gl.program, 1, "in_normal");
-	glBindAttribLocation(gl.program, 2, "in_color");
-
 	ret = link_program(gl.program);
 	if (ret)
 		return NULL;
@@ -228,6 +224,9 @@ const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gb
 
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program, "modelviewprojectionMatrix");
+	GLint position_attrib = glGetAttribLocation(gl.program, "in_position");
+	GLint normal_attrib = glGetAttribLocation(gl.program, "in_normal");
+	GLint color_attrib = glGetAttribLocation(gl.program, "in_color");
 
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);
@@ -241,12 +240,12 @@ const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gb
 	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.colorsoffset, sizeof(vColors), &vColors[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.colorsoffset);
-	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glEnableVertexAttribArray(position_attrib);
+	glVertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glEnableVertexAttribArray(normal_attrib);
+	glVertexAttribPointer(color_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.colorsoffset);
+	glEnableVertexAttribArray(color_attrib);
 
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 

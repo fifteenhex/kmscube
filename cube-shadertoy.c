@@ -45,7 +45,7 @@ static struct {
 	/* Shadertoy rendering (to FBO): */
 	GLuint stoy_program;
 	GLuint stoy_fbo, stoy_fbotex;
-	GLint stoy_time_loc;
+	GLint stoy_time_loc, stoy_position;
 	GLuint stoy_vbo;
 
 	/* Cube rendering (textures from FBO): */
@@ -57,6 +57,7 @@ static struct {
 	GLuint vbo;
 	GLuint positionsoffset, texcoordsoffset, normalsoffset;
 	GLuint tex[2];
+	GLint position_attrib, normal_attrib, texcoord_attrib;
 } gl;
 
 static const GLfloat vVertices[] = {
@@ -255,12 +256,11 @@ static int init_shadertoy(const char *file)
 	int ret = load_shader(file);
 	gl.stoy_program = ret;
 
-	glBindAttribLocation(gl.stoy_program, 0, "position");
-
 	ret = link_program(gl.stoy_program);
 
 	glUseProgram(gl.stoy_program);
 	gl.stoy_time_loc = glGetUniformLocation(gl.stoy_program, "iTime");
+	gl.stoy_position = glGetAttribLocation(gl.stoy_program, "position");
 
 	/* we can set iResolution a single time, it doesn't change: */
 	GLint resolution_location = glGetUniformLocation(gl.stoy_program, "iResolution");
@@ -314,8 +314,8 @@ static void draw_shadertoy(unsigned i)
 	glUniform1f(gl.stoy_time_loc, (float)i / 60.0f);
 
 	glBindBuffer(GL_ARRAY_BUFFER, gl.stoy_vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)0);
-	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(gl.stoy_position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)0);
+	glEnableVertexAttribArray(gl.stoy_position);
 
 	glDrawBuffers(1, mrt_bufs);
 
@@ -325,7 +325,7 @@ static void draw_shadertoy(unsigned i)
 
 	end_perfcntrs();
 
-	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(gl.stoy_position);
 
 	/* Restore back buffer and viewport */
 	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
@@ -357,12 +357,12 @@ static void draw_cube_shadertoy(unsigned i)
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
-	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(gl.position_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glEnableVertexAttribArray(gl.position_attrib);
+	glVertexAttribPointer(gl.normal_attrib, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glEnableVertexAttribArray(gl.normal_attrib);
+	glVertexAttribPointer(gl.texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glEnableVertexAttribArray(gl.texcoord_attrib);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gl.stoy_fbotex);
@@ -375,9 +375,9 @@ static void draw_cube_shadertoy(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(gl.position_attrib);
+	glDisableVertexAttribArray(gl.normal_attrib);
+	glDisableVertexAttribArray(gl.texcoord_attrib);
 }
 
 const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm *gbm, const char *file)
@@ -396,10 +396,6 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 
 	gl.program = ret;
 
-	glBindAttribLocation(gl.program, 0, "in_position");
-	glBindAttribLocation(gl.program, 1, "in_normal");
-	glBindAttribLocation(gl.program, 2, "in_TexCoord");
-
 	ret = link_program(gl.program);
 	if (ret)
 		return NULL;
@@ -407,6 +403,9 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program, "modelviewprojectionMatrix");
 	gl.texture   = glGetUniformLocation(gl.program, "uTex");
+	gl.position_attrib = glGetAttribLocation(gl.program, "in_position");
+	gl.normal_attrib = glGetAttribLocation(gl.program, "in_normal");
+	gl.texcoord_attrib = glGetAttribLocation(gl.program, "in_TexCoord");
 
 	glViewport(0, 0, gbm->width, gbm->height);
 	glEnable(GL_CULL_FACE);
