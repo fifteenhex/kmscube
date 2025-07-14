@@ -55,7 +55,7 @@ static struct {
 	struct egl egl;
 	struct gears_framebuffer gears_fb;
 
-	GLfloat aspect;
+	ESMatrix projection;
 	GLsizei width, height;
 
 	GLuint program_face, program_gears;
@@ -646,12 +646,9 @@ draw_gears(unsigned i)
 	esRotate(&modelview, 45.0f - (0.5f * i), 0.0f, 1.0f, 0.0f);
 	esRotate(&modelview, 10.0f + (0.15f * i), 0.0f, 0.0f, 1.0f);
 
-	ESMatrix projection;
-	esFrustum(&projection, -2.8f, +2.8f, -2.8f * gl.aspect, +2.8f * gl.aspect, 6.0f, 10.0f);
-
 	ESMatrix modelviewprojection;
 	esMatrixLoadIdentity(&modelviewprojection);
-	esMatrixMultiply(&modelviewprojection, &modelview, &projection);
+	esMatrixMultiply(&modelviewprojection, &modelview, &gl.projection);
 
 	glUniformMatrix4fv(gl.modelviewmatrix, 1, GL_FALSE, &modelview.m[0][0]);
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
@@ -682,7 +679,9 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 
 	(void)egl;
 
-	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
+	GLfloat aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
+	esMatrixLoadIdentity(&gl.projection);
+	esFrustum(&gl.projection, -2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
 	gl.width = gbm->width;
 	gl.height = gbm->height;
 

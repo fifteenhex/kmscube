@@ -36,7 +36,7 @@ static struct cube cube;
 static struct {
 	const struct egl *egl;
 
-	GLfloat aspect;
+	ESMatrix projection;
 	const struct gbm *gbm;
 
 	GLuint program, blit_program;
@@ -267,13 +267,9 @@ static void draw_cube_video(unsigned i)
 	esRotate(&modelview, 45.0f - (0.5f * i), 0.0f, 1.0f, 0.0f);
 	esRotate(&modelview, 10.0f + (0.15f * i), 0.0f, 0.0f, 1.0f);
 
-	ESMatrix projection;
-	esMatrixLoadIdentity(&projection);
-	esFrustum(&projection, -2.1f, +2.1f, -2.1f * gl.aspect, +2.1f * gl.aspect, 6.0f, 10.0f);
-
 	ESMatrix modelviewprojection;
 	esMatrixLoadIdentity(&modelviewprojection);
-	esMatrixMultiply(&modelviewprojection, &modelview, &projection);
+	esMatrixMultiply(&modelviewprojection, &modelview, &gl.projection);
 
 	glUniformMatrix4fv(gl.modelviewmatrix, 1, GL_FALSE, &modelview.m[0][0]);
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
@@ -318,7 +314,9 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 		return NULL;
 	}
 
-	gl.aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
+	GLfloat aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
+	esMatrixLoadIdentity(&gl.projection);
+	esFrustum(&gl.projection, -2.1f, +2.1f, -2.1f * aspect, +2.1f * aspect, 6.0f, 10.0f);
 	gl.gbm = gbm;
 
 	ret = create_program(blit_vs, blit_fs);
