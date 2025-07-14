@@ -399,7 +399,7 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 
 	glBindAttribLocation(gl.program, 0, "in_position");
 	glBindAttribLocation(gl.program, 1, "in_normal");
-	glBindAttribLocation(gl.program, 2, "in_color");
+	glBindAttribLocation(gl.program, 2, "in_TexCoord");
 
 	ret = link_program(gl.program);
 	if (ret)
