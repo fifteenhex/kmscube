@@ -41,7 +41,7 @@ static struct {
 
 	GLuint program;
 	/* uniform handles: */
-	GLint modelviewmatrix, modelviewprojectionmatrix, normalmatrix;
+	GLint modelviewmatrix, modelviewprojectionmatrix;
 	GLint texture, textureuv;
 	GLuint vbo;
 	GLuint positionsoffset, texcoordsoffset, normalsoffset;
@@ -150,7 +150,6 @@ static const GLfloat vNormals[] = {
 static const char *vertex_shader_source =
 		"uniform mat4 modelviewMatrix;      \n"
 		"uniform mat4 modelviewprojectionMatrix;\n"
-		"uniform mat3 normalMatrix;         \n"
 		"                                   \n"
 		"attribute vec4 in_position;        \n"
 		"attribute vec3 in_normal;          \n"
@@ -164,6 +163,7 @@ static const char *vertex_shader_source =
 		"void main()                        \n"
 		"{                                  \n"
 		"    gl_Position = modelviewprojectionMatrix * in_position;\n"
+		"    mat3 normalMatrix = mat3(modelviewMatrix);\n"
 		"    vec3 vEyeNormal = normalMatrix * in_normal;\n"
 		"    vec4 vPosition4 = modelviewMatrix * in_position;\n"
 		"    vec3 vPosition3 = vPosition4.xyz / vPosition4.w;\n"
@@ -439,20 +439,8 @@ static void draw_cube_tex(unsigned i)
 	esMatrixLoadIdentity(&modelviewprojection);
 	esMatrixMultiply(&modelviewprojection, &modelview, &projection);
 
-	float normal[9];
-	normal[0] = modelview.m[0][0];
-	normal[1] = modelview.m[0][1];
-	normal[2] = modelview.m[0][2];
-	normal[3] = modelview.m[1][0];
-	normal[4] = modelview.m[1][1];
-	normal[5] = modelview.m[1][2];
-	normal[6] = modelview.m[2][0];
-	normal[7] = modelview.m[2][1];
-	normal[8] = modelview.m[2][2];
-
 	glUniformMatrix4fv(gl.modelviewmatrix, 1, GL_FALSE, &modelview.m[0][0]);
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
-	glUniformMatrix3fv(gl.normalmatrix, 1, GL_FALSE, normal);
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
 
 	if (gl.mode == NV12_2IMG)
@@ -501,7 +489,6 @@ const struct cube * init_cube_tex(const struct egl *egl, const struct gbm *gbm, 
 
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program, "modelviewprojectionMatrix");
-	gl.normalmatrix = glGetUniformLocation(gl.program, "normalMatrix");
 	if (mode == NV12_2IMG) {
 		gl.texture   = glGetUniformLocation(gl.program, "uTexY");
 		gl.textureuv = glGetUniformLocation(gl.program, "uTexUV");
