@@ -46,7 +46,6 @@ struct gears_framebuffer {
 	GLuint fb;
 	GLuint db;
 	GLuint cb_tex;
-	GLuint db_tex;
 };
 
 static struct cube cube;
@@ -468,7 +467,6 @@ static void
 gears_framebuffer_destroy()
 {
 	glDeleteTextures(1, &gl.gears_fb.cb_tex);
-	glDeleteTextures(1, &gl.gears_fb.db_tex);
 	glDeleteRenderbuffers(1, &gl.gears_fb.db);
 	glDeleteFramebuffers(1, &gl.gears_fb.fb);
 }
@@ -484,22 +482,15 @@ gears_framebuffer_create()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texw, texh, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-	glGenTextures(1, &gl.gears_fb.db_tex);
-	glBindTexture(GL_TEXTURE_2D, gl.gears_fb.db_tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, texw, texh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 0);
-
 	glGenFramebuffers(1, &gl.gears_fb.fb);
 	glBindFramebuffer(GL_FRAMEBUFFER, gl.gears_fb.fb);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl.gears_fb.cb_tex, 0);
 
 	glGenRenderbuffers(1, &gl.gears_fb.db);
 	glBindRenderbuffer(GL_RENDERBUFFER, gl.gears_fb.db);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gl.gears_fb.db_tex, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl.gears_fb.cb_tex, 0);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, texw, texh);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gl.gears_fb.db);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("failed framebuffer check for created target buffer\n");
