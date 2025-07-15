@@ -608,8 +608,6 @@ draw_gears(unsigned i)
 
 	glViewport(0, 0, texw, texh);
 
-	glClearColor(0.5, 0.5, 0.5, 1.0);
-
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -637,7 +635,6 @@ draw_gears(unsigned i)
 	ESMatrix modelview;
 
 	/* clear the color buffer */
-	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	esMatrixLoadIdentity(&modelview);
@@ -757,6 +754,8 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	gear3 = create_gear(1.3, 2.0, 0.5, 10, 0.7);
 
 	esFrustum(&gears_projection_matrix, -1.0, 1.0, -1.0, 1.0, 5.0, 60.0);
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 
 	cube.draw = draw_gears;
 

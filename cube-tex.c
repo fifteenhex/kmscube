@@ -422,7 +422,6 @@ static void draw_cube_tex(unsigned i)
 	ESMatrix modelview;
 
 	/* clear the color buffer */
-	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	esMatrixLoadIdentity(&modelview);
@@ -519,6 +518,8 @@ const struct cube * init_cube_tex(const struct egl *egl, const struct gbm *gbm, 
 		printf("failed to initialize EGLImage texture\n");
 		return NULL;
 	}
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 
 	cube.draw = draw_cube_tex;
 

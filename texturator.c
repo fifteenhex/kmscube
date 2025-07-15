@@ -515,6 +515,8 @@ static void setup_gl(void)
 	glGenTextures(1, &tex);
 
 	tex_handle = glGetUniformLocation(prog, "tex");
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 }
 
 static void update_texture(void)
@@ -712,7 +714,6 @@ static void draw_and_check_quads(unsigned frame)
 		printf("Testing %dx%dx%d:%s\n", size.x, size.y, size.z, fmt->name);
 
 	/* clear the color buffer */
-	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	float sw = gbm->width;

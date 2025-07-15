@@ -177,7 +177,6 @@ static void draw_cube_smooth(unsigned i)
 	ESMatrix modelview;
 
 	/* clear the color buffer */
-	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	esMatrixLoadIdentity(&modelview);
@@ -248,6 +247,8 @@ const struct cube * init_cube_smooth(const struct egl *egl, const struct gbm *gb
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.colorsoffset);
 	glEnableVertexAttribArray(2);
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 
 	cube.draw = draw_cube_smooth;
 

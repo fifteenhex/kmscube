@@ -252,7 +252,6 @@ static void draw_cube_video(unsigned i)
 	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, frame);
 
 	/* clear the color buffer */
-	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(gl.blit_program);
@@ -373,6 +372,8 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	glEnableVertexAttribArray(2);
 
 	glGenTextures(1, &gl.tex);
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 
 	cube.draw = draw_cube_video;
 

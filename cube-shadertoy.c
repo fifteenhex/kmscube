@@ -334,7 +334,6 @@ static void draw_cube_shadertoy(unsigned i)
 	glEnable(GL_CULL_FACE);
 
 	/* clear the color buffer */
-	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(gl.program);
@@ -435,6 +434,8 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 		printf("failed to initialize\n");
 		return NULL;
 	}
+
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 
 	cube.draw = draw_cube_shadertoy;
 
