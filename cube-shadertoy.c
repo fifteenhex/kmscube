@@ -267,11 +267,13 @@ static int init_shadertoy(const char *file)
 	GLint resolution_location = glGetUniformLocation(gl.stoy_program, "iResolution");
 	glUniform3f(resolution_location, texw, texh, 0);
 
+	int current_fb;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fb);
 	glGenFramebuffers(1, &gl.stoy_fbo);
-	glGenTextures(1, &gl.stoy_fbotex);
 	glBindFramebuffer(GL_FRAMEBUFFER, gl.stoy_fbo);
 
 	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &gl.stoy_fbotex);
 	glBindTexture(GL_TEXTURE_2D, gl.stoy_fbotex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -292,12 +294,17 @@ static int init_shadertoy(const char *file)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), 0, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices[0]);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
+
 	return 0;
 }
 
 static void draw_shadertoy(unsigned i)
 {
 	GLenum mrt_bufs[] = {GL_COLOR_ATTACHMENT0};
+
+	int current_fb;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fb);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, gl.stoy_fbo);
 	glViewport(0, 0, texw, texh);
@@ -320,7 +327,7 @@ static void draw_shadertoy(unsigned i)
 	glDisableVertexAttribArray(0);
 
 	/* switch back to back buffer: */
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
 }
 
 static void draw_cube_shadertoy(unsigned i)
