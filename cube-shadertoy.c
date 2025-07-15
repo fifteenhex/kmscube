@@ -291,7 +291,6 @@ static int init_shadertoy(const char *file)
 	glBindBuffer(GL_ARRAY_BUFFER, gl.stoy_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), 0, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)0);
 
 	return 0;
 }
@@ -400,8 +399,6 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 	if (ret)
 		return NULL;
 
-	glUseProgram(gl.program);
-
 	gl.modelviewmatrix = glGetUniformLocation(gl.program, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program, "modelviewprojectionMatrix");
 	gl.texture   = glGetUniformLocation(gl.program, "uTex");
@@ -419,9 +416,6 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.texcoordsoffset, sizeof(vTexCoords), &vTexCoords[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
 
 	ret = init_shadertoy(file);
 	if (ret) {
