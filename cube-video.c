@@ -234,8 +234,6 @@ static void draw_cube_video(unsigned i)
 	frame = video_frame(gl.decoder);
 	if (!frame) {
 		/* end of stream */
-		glDeleteTextures(1, &gl.tex);
-		glGenTextures(1, &gl.tex);
 		video_deinit(gl.decoder);
 		gl.idx = (gl.idx + 1) % gl.filenames_count;
 		gl.decoder = video_init(gl.egl, gl.gbm, gl.filenames[gl.idx]);
@@ -245,10 +243,6 @@ static void draw_cube_video(unsigned i)
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_EXTERNAL_OES, gl.tex);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, frame);
 
 	/* clear the color buffer */
@@ -372,6 +366,11 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	glEnableVertexAttribArray(2);
 
 	glGenTextures(1, &gl.tex);
+	glBindTexture(GL_TEXTURE_EXTERNAL_OES, gl.tex);
+	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 
