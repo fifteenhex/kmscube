@@ -652,6 +652,11 @@ draw_gears(unsigned i)
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
 
+	/* Set up the position of the attributes in the buffer */
+	glVertexAttribPointer(gl.in_position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glVertexAttribPointer(gl.in_normal, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glVertexAttribPointer(gl.in_texcoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
@@ -660,6 +665,7 @@ draw_gears(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 	glUseProgram(0);
 
+	/* Disable the attributes */
 	glDisableVertexAttribArray(gl.in_position);
 	glDisableVertexAttribArray(gl.in_normal);
 	glDisableVertexAttribArray(gl.in_texcoord);
@@ -698,8 +704,6 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	if (ret)
 		return NULL;
 
-	glUseProgram(gl.program_face);
-
 	gl.modelviewmatrix = glGetUniformLocation(gl.program_face, "modelviewMatrix");
 	gl.modelviewprojectionmatrix = glGetUniformLocation(gl.program_face, "modelviewprojectionMatrix");
 
@@ -718,12 +722,6 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.texcoordsoffset, sizeof(vTexCoords), &vTexCoords[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
-	glVertexAttribPointer(gl.in_position, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glEnableVertexAttribArray(gl.in_position);
-	glVertexAttribPointer(gl.in_normal, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glEnableVertexAttribArray(gl.in_normal);
-	glVertexAttribPointer(gl.in_texcoord, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
-	glEnableVertexAttribArray(gl.in_texcoord);
 
 	ret = create_program(gears_vertex_shader, gears_fragment_shader);
 	if (ret < 0)
@@ -739,7 +737,6 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	ret = link_program(gl.program_gears);
 	if (ret)
 		return NULL;
-	glUseProgram(gl.program_gears);
 
 	/* Get the locations of the uniforms so we can access them */
 	modelview_projection_matrix_location = glGetUniformLocation(gl.program_gears, "ModelViewProjectionMatrix");
