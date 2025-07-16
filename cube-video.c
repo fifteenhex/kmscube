@@ -250,7 +250,15 @@ static void draw_cube_video(unsigned i)
 
 	glUseProgram(gl.blit_program);
 	glUniform1i(gl.blit_texture, 0); /* '0' refers to texture unit 0. */
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(0);
 
 	glUseProgram(gl.program);
 
@@ -267,6 +275,12 @@ static void draw_cube_video(unsigned i)
 	glUniformMatrix4fv(gl.modelviewmatrix, 1, GL_FALSE, &modelview.m[0][0]);
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
@@ -274,6 +288,10 @@ static void draw_cube_video(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 12, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
+
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(0);
 
 	gl.last_fence = gl.egl->eglCreateSyncKHR(gl.egl->display, EGL_SYNC_FENCE_KHR, NULL);
 }
@@ -358,12 +376,6 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	glBufferSubData(GL_ARRAY_BUFFER, gl.positionsoffset, sizeof(vVertices), &vVertices[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.texcoordsoffset, sizeof(vTexCoords), &vTexCoords[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, gl.normalsoffset, sizeof(vNormals), &vNormals[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
-	glEnableVertexAttribArray(2);
 
 	glGenTextures(1, &gl.tex);
 	glBindTexture(GL_TEXTURE_EXTERNAL_OES, gl.tex);
