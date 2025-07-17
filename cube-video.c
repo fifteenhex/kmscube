@@ -43,7 +43,7 @@ static struct {
 	/* uniform handles: */
 	GLint modelviewmatrix, modelviewprojectionmatrix;
 	GLint texture, blit_texture;
-	GLuint vbo;
+	GLuint vbo, blit_vbo;
 	GLuint positionsoffset, texcoordsoffset, normalsoffset;
 	GLuint tex;
 
@@ -54,6 +54,16 @@ static struct {
 
 	EGLSyncKHR last_fence;
 } gl;
+
+static const struct blit_vertex {
+        GLfloat position[2];
+        GLfloat texCoord[2];
+} blit_vertices[] = {
+	{{-1.0f, -1.0f}, {0.0f, 1.0f}},
+	{{ 1.0f, -1.0f}, {1.0f, 1.0f}},
+	{{-1.0f,  1.0f}, {0.0f, 0.0f}},
+	{{ 1.0f,  1.0f}, {1.0f, 0.0f}},
+};
 
 static const GLfloat vVertices[] = {
 		// front
@@ -259,8 +269,9 @@ static void draw_cube_video(unsigned i)
 
 	glUseProgram(gl.blit_program);
 	glUniform1i(gl.blit_texture, 0); /* '0' refers to texture unit 0. */
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
+	glBindBuffer(GL_ARRAY_BUFFER, gl.blit_vbo);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(blit_vertices[0]), (const GLvoid *)offsetof(struct blit_vertex, position));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(blit_vertices[0]), (const GLvoid *)offsetof(struct blit_vertex, texCoord));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
@@ -284,6 +295,7 @@ static void draw_cube_video(unsigned i)
 	glUniformMatrix4fv(gl.modelviewmatrix, 1, GL_FALSE, &modelview.m[0][0]);
 	glUniformMatrix4fv(gl.modelviewprojectionmatrix, 1, GL_FALSE, &modelviewprojection.m[0][0]);
 	glUniform1i(gl.texture, 0); /* '0' refers to texture unit 0. */
+	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.positionsoffset);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.texcoordsoffset);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid *)(intptr_t)gl.normalsoffset);
@@ -353,6 +365,10 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 		return NULL;
 
 	gl.blit_texture = glGetUniformLocation(gl.blit_program, "uTex");
+
+	glGenBuffers(1, &gl.blit_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, gl.blit_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(blit_vertices), &blit_vertices[0], GL_STATIC_DRAW);
 
 	ret = create_program(vertex_shader_source, fragment_shader_source);
 	if (ret < 0)
