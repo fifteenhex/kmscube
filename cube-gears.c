@@ -55,7 +55,6 @@ static struct {
 	struct gears_framebuffer gears_fb;
 
 	ESMatrix projection;
-	GLsizei width, height;
 
 	GLuint program_face, program_gears;
 
@@ -561,7 +560,9 @@ draw_gear(struct gear *gear, ESMatrix *transform,
 static void
 draw_gears(unsigned i)
 {
-	int current_fb;
+	/* Save current back buffer and viewport */
+	GLint current_fb, viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fb);
 
 	static const GLfloat red[4] = { 0.8, 0.1, 0.0, 1.0 };
@@ -604,7 +605,9 @@ draw_gears(unsigned i)
 
 	glDisable(GL_DEPTH_TEST);
 
+	/* Restore back buffer and viewport */
 	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
 	glBindTexture(GL_TEXTURE_2D, gl.gears_fb.cb_tex);
 
@@ -615,8 +618,6 @@ draw_gears(unsigned i)
 	glEnableVertexAttribArray(gl.in_position);
 	glEnableVertexAttribArray(gl.in_normal);
 	glEnableVertexAttribArray(gl.in_texcoord);
-
-	glViewport(0, 0, gl.width, gl.height);
 
 	ESMatrix modelview;
 
@@ -666,8 +667,6 @@ init_cube_gears(const struct egl *egl, const struct gbm *gbm)
 	GLfloat aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
 	esMatrixLoadIdentity(&gl.projection);
 	esFrustum(&gl.projection, -2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
-	gl.width = gbm->width;
-	gl.height = gbm->height;
 
 	ret = create_program(cube_vertex_shader, cube_fragment_shader);
 	if (ret < 0)
