@@ -50,7 +50,6 @@ static struct {
 
 	/* Cube rendering (textures from FBO): */
 	ESMatrix projection;
-	GLsizei width, height;
 	GLuint program;
 	/* uniform handles: */
 	GLint modelviewmatrix, modelviewprojectionmatrix;
@@ -303,7 +302,9 @@ static void draw_shadertoy(unsigned i)
 {
 	GLenum mrt_bufs[] = {GL_COLOR_ATTACHMENT0};
 
-	int current_fb;
+	/* Save current back buffer and viewport */
+	GLint current_fb, viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fb);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, gl.stoy_fbo);
@@ -326,8 +327,9 @@ static void draw_shadertoy(unsigned i)
 
 	glDisableVertexAttribArray(0);
 
-	/* switch back to back buffer: */
+	/* Restore back buffer and viewport */
 	glBindFramebuffer(GL_FRAMEBUFFER, current_fb);
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
 static void draw_cube_shadertoy(unsigned i)
@@ -335,8 +337,6 @@ static void draw_cube_shadertoy(unsigned i)
 	ESMatrix modelview;
 
 	draw_shadertoy(i);
-
-	glViewport(0, 0, gl.width, gl.height);
 
 	/* clear the color buffer */
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -389,8 +389,6 @@ const struct cube * init_cube_shadertoy(const struct egl *egl, const struct gbm 
 	GLfloat aspect = (GLfloat)(gbm->height) / (GLfloat)(gbm->width);
 	esMatrixLoadIdentity(&gl.projection);
 	esFrustum(&gl.projection, -2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
-	gl.width = gbm->width;
-	gl.height = gbm->height;
 
 	ret = create_program(cube_vs, cube_fs);
 	if (ret < 0)
