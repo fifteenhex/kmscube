@@ -331,7 +331,6 @@ static void draw_cube_shadertoy(unsigned i)
 	draw_shadertoy(i);
 
 	glViewport(0, 0, gl.width, gl.height);
-	glEnable(GL_CULL_FACE);
 
 	/* clear the color buffer */
 	glClear(GL_COLOR_BUFFER_BIT);
