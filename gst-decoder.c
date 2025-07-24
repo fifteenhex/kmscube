@@ -284,6 +284,8 @@ video_init(const struct egl *egl, const struct gbm *gbm, const char *filename)
 	pad = gst_element_get_static_pad(dec->sink, "sink");
 	gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
 		appsink_query_cb, NULL, NULL);
+	gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+		pad_probe, dec, NULL);
 	gst_object_unref(pad);
 
 	src = gst_bin_get_by_name(GST_BIN(dec->pipeline), "src");
@@ -298,10 +300,6 @@ video_init(const struct egl *egl, const struct gbm *gbm, const char *filename)
 	 * vsync and quickly chew up 100's of MB of buffers:
 	 */
 	g_object_set(G_OBJECT(dec->sink), "max-buffers", 2, NULL);
-
-	gst_pad_add_probe(gst_element_get_static_pad(dec->sink, "sink"),
-			GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-			pad_probe, dec, NULL);
 
 	/* callback needed to make sure we get dmabuf's from v4l2videoNdec.. */
 	decodebin = gst_bin_get_by_name(GST_BIN(dec->pipeline), "decode");
