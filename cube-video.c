@@ -46,7 +46,6 @@ static struct {
 	GLuint vbo, blit_vbo;
 	GLint position_attrib, texcoord_attrib, normal_attrib;
 	GLint blit_position_attrib, blit_texcoord_attrib;
-	GLuint tex;
 
 	/* video decoder: */
 	struct decoder *decoder;
@@ -79,10 +78,9 @@ static const char *blit_vs =
 		"}                                  \n";
 
 static const char *blit_fs =
-		"#extension GL_OES_EGL_image_external : enable\n"
 		"precision mediump float;           \n"
 		"                                   \n"
-		"uniform samplerExternalOES uTex;   \n"
+		"uniform sampler2D uTex;            \n"
 		"                                   \n"
 		"varying vec2 vTexCoord;            \n"
 		"                                   \n"
@@ -118,10 +116,9 @@ static const char *vertex_shader_source =
 		"}                            \n";
 
 static const char *fragment_shader_source =
-		"#extension GL_OES_EGL_image_external : enable\n"
 		"precision mediump float;           \n"
 		"                                   \n"
-		"uniform samplerExternalOES uTex;   \n"
+		"uniform sampler2D uTex;            \n"
 		"                                   \n"
 		"varying vec4 vVaryingColor;        \n"
 		"varying vec2 vTexCoord;            \n"
@@ -135,7 +132,7 @@ static const char *fragment_shader_source =
 static void draw_cube_video(unsigned i)
 {
 	ESMatrix modelview;
-	EGLImage frame;
+	GLint frame;
 
 	if (gl.last_fence) {
 		gl.egl->eglClientWaitSyncKHR(gl.egl->display, gl.last_fence, 0, EGL_FOREVER_KHR);
@@ -144,7 +141,7 @@ static void draw_cube_video(unsigned i)
 	}
 
 	frame = video_frame(gl.decoder);
-	if (!frame) {
+	if (frame == -1) {
 		/* end of stream */
 		video_deinit(gl.decoder);
 		gl.idx = (gl.idx + 1) % gl.filenames_count;
@@ -154,7 +151,7 @@ static void draw_cube_video(unsigned i)
 			return;
 		}
 		frame = video_frame(gl.decoder);
-		if (!frame) {
+		if (frame == -1) {
 			printf("cannot get frames from new decoder\n");
 			return;
 		}
@@ -163,8 +160,11 @@ static void draw_cube_video(unsigned i)
 	glUseProgram(gl.blit_program);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_EXTERNAL_OES, gl.tex);
-	gl.egl->glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, frame);
+	glBindTexture(GL_TEXTURE_2D, frame);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	/* clear the color buffer */
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -226,8 +226,7 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 
 	gl.egl = egl;
 
-	if (egl_check(gl.egl, glEGLImageTargetTexture2DOES) ||
-	    egl_check(gl.egl, eglCreateSyncKHR) ||
+	if (egl_check(gl.egl, eglCreateSyncKHR) ||
 	    egl_check(gl.egl, eglDestroySyncKHR) ||
 	    egl_check(gl.egl, eglClientWaitSyncKHR))
 		return NULL;
@@ -282,13 +281,6 @@ const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm
 	glGenBuffers(1, &gl.vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, gl.vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
-
-	glGenTextures(1, &gl.tex);
-	glBindTexture(GL_TEXTURE_EXTERNAL_OES, gl.tex);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 

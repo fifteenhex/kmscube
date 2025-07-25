@@ -202,7 +202,7 @@ init_cube_shadertoy(const struct egl *egl, const struct gbm *gbm, const char *sh
 
 struct decoder;
 struct decoder * video_init(const struct egl *egl, const struct gbm *gbm, const char *filename);
-EGLImage video_frame(struct decoder *dec);
+GLint video_frame(struct decoder *dec);
 void video_deinit(struct decoder *dec);
 
 const struct cube * init_cube_video(const struct egl *egl, const struct gbm *gbm, const char *video);
