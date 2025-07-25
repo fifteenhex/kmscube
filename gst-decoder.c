@@ -317,20 +317,24 @@ set_last_frame(struct decoder *dec, GstSample *samp)
 }
 
 GLint
-buffer_to_image(struct decoder *dec, GstBuffer *buf)
+video_frame(struct decoder *dec)
 {
-	guint nmems = gst_buffer_n_memory(buf);
-	guint nplanes = GST_VIDEO_INFO_N_PLANES(&(dec->info));
-	guint width, height;
-	GstMemory *mem;
+	GstSample *samp = gst_app_sink_pull_sample(GST_APP_SINK(dec->sink));
+	if (!samp) {
+		GST_DEBUG("got no appsink sample");
+		return -1;
+	}
 
+	GstBuffer *buf = gst_sample_get_buffer(samp);
+
+	guint nmems = gst_buffer_n_memory(buf);
 	if (nmems > 1) {
 		/* this case currently is not defined */
 		GST_FIXME("gstbuffers with multiple memory blocks are not supported");
 		return -1;
 	}
 
-	mem = gst_buffer_peek_memory(buf, 0);
+	GstMemory *mem = gst_buffer_peek_memory(buf, 0);
 	if (!mem) {
 		GST_ERROR("no memory in buffer");
 		return -1;
@@ -341,16 +345,13 @@ buffer_to_image(struct decoder *dec, GstBuffer *buf)
 		return -1;
 	}
 
-	width = GST_VIDEO_INFO_WIDTH(&(dec->info));
-	height = GST_VIDEO_INFO_HEIGHT(&(dec->info));
-
 	/* output some information at the beginning (= when the first frame is handled) */
 	if (dec->frame == 0) {
-		GstVideoFormat pixfmt;
-		const char *pixfmt_str;
-
-		pixfmt = GST_VIDEO_INFO_FORMAT(&(dec->info));
-		pixfmt_str = gst_video_format_to_string(pixfmt);
+		guint width = GST_VIDEO_INFO_WIDTH(&(dec->info));
+		guint height = GST_VIDEO_INFO_HEIGHT(&(dec->info));
+		GstVideoFormat pixfmt = GST_VIDEO_INFO_FORMAT(&(dec->info));
+		const char *pixfmt_str = gst_video_format_to_string(pixfmt);
+		guint nplanes = GST_VIDEO_INFO_N_PLANES(&(dec->info));
 
 		printf("===================================\n");
 		printf("GStreamer video stream information:\n");
@@ -359,32 +360,11 @@ buffer_to_image(struct decoder *dec, GstBuffer *buf)
 		printf("===================================\n");
 	}
 
-	return ((GstGLMemory *)mem)->tex_id;
-}
-
-GLint
-video_frame(struct decoder *dec)
-{
-	GstSample *samp;
-	GstBuffer *buf;
-	GLint frame = 0;
-
-	samp = gst_app_sink_pull_sample(GST_APP_SINK(dec->sink));
-	if (!samp) {
-		GST_DEBUG("got no appsink sample");
-		return -1;
-	}
-
-	buf = gst_sample_get_buffer(samp);
-
-	// TODO inline buffer_to_image??
-	frame = buffer_to_image(dec, buf);
-
 	set_last_frame(dec, samp);
 
 	dec->frame++;
 
-	return frame;
+	return ((GstGLMemory *)mem)->tex_id;
 }
 
 void video_deinit(struct decoder *dec)
