@@ -237,6 +237,15 @@ static void draw_cube_video(unsigned i)
 		video_deinit(gl.decoder);
 		gl.idx = (gl.idx + 1) % gl.filenames_count;
 		gl.decoder = video_init(gl.egl, gl.gbm, gl.filenames[gl.idx]);
+		if (!gl.decoder) {
+			printf("cannot create new video decoder\n");
+			return;
+		}
+		frame = video_frame(gl.decoder);
+		if (!frame) {
+			printf("cannot get frames from new decoder\n");
+			return;
+		}
 	}
 
 	glUseProgram(gl.blit_program);
