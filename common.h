@@ -87,6 +87,7 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurfaceEXT (EGLDisplay dpy,
 #endif /* EGL_VERSION_1_5 */
 
 #define WEAK __attribute__((weak))
+#define NOSTRING __attribute__((__nonstring__))
 
 /* Define tokens from EGL_EXT_image_dma_buf_import_modifiers */
 #ifndef EGL_EXT_image_dma_buf_import_modifiers
