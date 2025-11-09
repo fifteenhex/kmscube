@@ -61,12 +61,18 @@ drm_fb_destroy_callback(struct gbm_bo *bo, void *data)
 
 struct drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
 {
-	int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
-	struct drm_fb *fb = gbm_bo_get_user_data(bo);
 	uint32_t width, height, format,
 		 strides[4] = {0}, handles[4] = {0},
 		 offsets[4] = {0}, flags = 0;
+	struct drm_fb *fb;
 	int ret = -1;
+	int drm_fd;
+
+	if (!bo)
+		return NULL;
+
+	drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
+	fb = gbm_bo_get_user_data(bo);
 
 	if (fb)
 		return fb;
