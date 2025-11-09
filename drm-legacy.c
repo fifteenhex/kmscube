@@ -53,12 +53,18 @@ static int legacy_run(const struct gbm *gbm, const struct egl *egl, const struct
 	uint32_t i = 0;
 	int ret;
 
+	printf("%s:%d\n", __func__, __LINE__);
 	if (gbm->surface) {
+		printf("%s:%d\n", __func__, __LINE__);
 		eglSwapBuffers(egl->display, egl->surface);
 		bo = gbm_surface_lock_front_buffer(gbm->surface);
 	} else {
+		printf("%s:%d\n", __func__, __LINE__);
 		bo = gbm->bos[0];
 	}
+	
+	printf("%s:%d %p\n", __func__, __LINE__, bo);
+	
 	fb = drm_fb_get_from_bo(bo);
 	if (!fb) {
 		fprintf(stderr, "Failed to get a new framebuffer BO\n");
