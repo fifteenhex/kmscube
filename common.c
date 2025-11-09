@@ -245,6 +245,9 @@ match_config_to_visual(EGLDisplay egl_display,
 				&id))
 			continue;
 
+		printf("%s:%d, - have 0x%x, want 0x%x\n",
+			   __func__, __LINE__, (unsigned int) id, (unsigned int) visual_id);
+
 		if (id == visual_id)
 			return i;
 	}
@@ -639,15 +642,20 @@ int buf_to_fd(const struct gbm *gbm,
 	uint8_t *map;
 	int fd;
 
+	printf("%d:%s\n", __func__, __LINE__);
+
 	switch (bpp) {
 	case 1:
+		printf("%d:%s\n", __func__, __LINE__);
 		format = GBM_FORMAT_R8;
 		break;
 	case 2:
+		printf("%d:%s\n", __func__, __LINE__);
 		format = GBM_FORMAT_GR88;
 		break;
 	case 4:
-		format = GBM_FORMAT_ABGR8888;
+		printf("%d:%s\n", __func__, __LINE__);
+		format = BIG_ENDIAN ? GBM_FORMAT_BGRA8888 : GBM_FORMAT_ABGR8888;
 		break;
 	default:
 		assert(!"unreachable");

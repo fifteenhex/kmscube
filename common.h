@@ -33,8 +33,16 @@
 
 #include <gbm.h>
 #include <drm_fourcc.h>
+#include <endian.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#if (__BYTE_ORDER == __BIG_ENDIAN)
+#define BIG_ENDIAN 1
+#else
+#define BIG_ENDIAN 0
+#endif
+
 
 extern const struct vertex {
         GLfloat position[3]; // x, y, z

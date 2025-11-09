@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	char mode_str[DRM_DISPLAY_MODE_LEN] = "";
 	char *p;
 	enum mode mode = SMOOTH;
-	uint32_t format = DRM_FORMAT_XRGB8888;
+	uint32_t format = BIG_ENDIAN ?  DRM_FORMAT_BGRX8888 : DRM_FORMAT_XRGB8888;
 	uint64_t modifier = DRM_FORMAT_MOD_LINEAR;
 	int samples = 0;
 	int atomic = 0;
